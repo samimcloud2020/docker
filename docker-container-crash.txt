@@ -1,0 +1,126 @@
+root@ip-172-31-88-213:~# journalctl -u docker
+May 27 08:18:25 ip-172-31-88-213 systemd[1]: Starting Docker Application Container Engine...
+May 27 08:18:25 ip-172-31-88-213 dockerd[3447]: time="2023-05-27T08:18:25.378508990Z" level=info msg="Starting up"
+
+
+Linux	Use the command journalctl -xu docker.service
+(or read /var/log/syslog or /var/log/messages, depending on your Linux Distribution)
+
+/var/log/messages instead aims at storing valuable, non-debug and non-critical messages.
+This log should be considered the "general system activity" log.
+
+/var/log/syslog in turn logs everything, except auth related messages.
+
+$vim /etc/docker/daemon.json
+{
+  "debug": true
+}
+
+ Also verify that if the log-level key is set, it is set to either info or debug. 
+ info is the default, and possible values are debug, info, warn, error, fatal.
+ 
+ Send a HUP signal to the daemon to cause it to reload its configuration. On Linux hosts, use the following command.
+
+root@ip-172-31-88-213:/etc/docker# ps aux | grep dockerd
+root         690  0.0  5.7 1225836 57016 ?       Ssl  16:44   0:00 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+root        9011  0.0  0.2   7004  2264 pts/1    S+   16:53   0:00 grep --color=auto dockerd
+$ sudo kill -SIGHUP $(pidof dockerd)   ----> $ sudo kill -SIGHUP 690
+On Windows hosts, restart Docker.
+------------------------------------------------------------------------------------------------------------------
+Docker daemon directory
+The Docker daemon persists all data in a single directory. This tracks everything related to Docker, including containers, images, volumes, service definition, and secrets.
+
+By default this directory is:
+
+/var/lib/docker on Linux. C:\ProgramData\docker on Windows.
+
+You can configure the Docker daemon to use a different directory, using the data-root configuration option.
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+root@ip-172-31-88-213:~# cat  /etc/docker/daemon.json
+{
+  "storage-driver": "overlay2",
+  "graph": "/var/lib/docker",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "2"
+  },
+  "debug": true,
+  "userns-remap": "0:0"
+} 
+root@ip-172-31-88-213:~# id
+uid=0(root) gid=0(root) groups=0(root)
+
+root@ip-172-31-88-213:~# systemctl restart docker
+
+root@ip-172-31-88-213:~# docker info
+Client:
+ Context:    default
+ Debug Mode: false
+
+Server:
+ Containers: 0
+  Running: 0
+  Paused: 0
+  Stopped: 0
+ Images: 0
+ Server Version: 20.10.21
+ Storage Driver: overlay2
+  Backing Filesystem: extfs
+  Supports d_type: true
+  Native Overlay Diff: true
+  userxattr: false
+ Logging Driver: json-file
+ Cgroup Driver: systemd
+ Cgroup Version: 2
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local logentries splunk syslog
+ Swarm: inactive
+ Runtimes: io.containerd.runc.v2 io.containerd.runtime.v1.linux runc
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: 
+ runc version: 
+ init version: 
+ Security Options:
+  apparmor
+  seccomp
+   Profile: default
+  cgroupns
+ Kernel Version: 5.19.0-1025-aws
+ Operating System: Ubuntu 22.04.2 LTS
+ OSType: linux
+ Architecture: x86_64
+ CPUs: 1
+ Total Memory: 965.7MiB
+ Name: ip-172-31-88-213
+ ID: XIMG:UYRX:ZIXG:LPI2:J2EP:R3SI:SBUQ:PCLT:I2VQ:7PRX:VVFB:RND5
+ Docker Root Dir: /var/lib/docker/0.0
+ Debug Mode: true
+  File Descriptors: 24
+  Goroutines: 33
+  System Time: 2023-05-31T17:47:44.869054782Z
+  EventsListeners: 0
+ Username: samimbsnl
+ Registry: https://index.docker.io/v1/
+ Labels:
+ Experimental: false
+ Insecure Registries:
+  127.0.0.0/8
+ Live Restore Enabled: false
+ 
+ ---------------------------------------------------------------------------------------------------------
+ root@ip-172-31-88-213:~# docker logs c4f9165b15ee 
+AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.17.0.2. Set the 'ServerName' directive globally to suppress this message
+AH00558: apache2: Could not reliably determine the server's fully qualified domain name, using 172.17.0.2. Set the 'ServerName' directive globally to suppress this message
+[Wed May 31 17:50:45.490569 2023] [mpm_event:notice] [pid 23:tid 140221860251520] AH00489: Apache/2.4.55 (Ubuntu) configured -- resuming normal operations
+[Wed May 31 17:50:45.490966 2023] [core:notice] [pid 23:tid 140221860251520] AH00094: Command line: '/usr/sbin/apache2 -D FOREGROUND'
+49.37.115.77 - - [31/May/2023:17:52:10 +0000] "GET / HTTP/1.1" 200 3121
+49.37.115.77 - - [31/May/2023:17:52:10 +0000] "GET / HTTP/1.1" 200 3121
+49.37.115.77 - - [31/May/2023:17:52:11 +0000] "GET /icons/ubuntu-logo.png HTTP/1.1" 200 3322
+49.37.115.77 - - [31/May/2023:17:52:11 +0000] "GET /favicon.ico HTTP/1.1" 404 278
+49.37.115.77 - - [31/May/2023:17:53:02 +0000] "-" 408 -
+______________________________________________________________________________________________________________________________
