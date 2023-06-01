@@ -1,3 +1,5 @@
+https://cloudcone.com/docs/article/how-to-install-splunk-on-ubuntu-18-04/
+
 $ vim /etc/docker/daemon.json
 {
   "log-driver": "json-file"
