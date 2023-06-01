@@ -1,0 +1,35 @@
+$ vim /etc/docker/daemon.json
+{
+  "log-driver": "json-file"
+}
+
+ sudo systemctl daemon-reload
+ sudo systemctl restart docker
+ 
+$ docker run -d -p 8000:8000 -e SPLUNK_START_ARGS='--accept-license' -e SPLUNK_PASSWORD='password' splunk/splunk:latest
+root@ip-172-31-88-213:~# docker ps
+CONTAINER ID   IMAGE                  COMMAND                  CREATED          STATUS                   PORTS                                                                                              NAMES
+bd75ac34a00f   splunk/splunk:latest   "/sbin/entrypoint.sh…"   3 minutes ago    Up 3 minutes (healthy)   8065/tcp, 8088-8089/tcp, 8191/tcp, 9887/tcp, 0.0.0.0:8000->8000/tcp, :::8000->8000/tcp, 9997/tcp   unruffled_tharp
+
+$ vim /etc/docker/daemon.json
+{
+  "log-driver": "splunk"
+}
+
+ sudo systemctl daemon-reload
+ sudo systemctl restart docker
+ 
+http://localhost:8000
+u: admin
+p: password
+
+And then go to Settings -> Data inputs -> HTTP Event Collector -> Add new.
+
+token 29214918-19c5-4a1a-83a9-55472fde3c3d
+
+$ docker run -p 80:80 --log-driver=splunk 
+--log-opt splunk-url=http://44.203.58.179:8000 
+--log-opt splunk-token=29214918-19c5-4a1a-83a9-55472fde3c3d 
+--log-opt splunk-insecureskipverify=true nginx
+
+$ docker run -p 80:80 --log-driver=splunk --log-opt splunk-url=http://44.202.61.213:8000 --log-opt splunk-token=b50c49d5-089c-44ec-b7b2-3ac3f2725fa8  --log-opt splunk-insecureskipverify=true nginx
