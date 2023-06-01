@@ -34,4 +34,4 @@ $ docker run -p 80:80 --log-driver=splunk
 --log-opt splunk-token=29214918-19c5-4a1a-83a9-55472fde3c3d 
 --log-opt splunk-insecureskipverify=true nginx
 
-$ docker run -p 80:80 --log-driver=splunk --log-opt splunk-url=http://44.202.61.213:8000 --log-opt splunk-token=b50c49d5-089c-44ec-b7b2-3ac3f2725fa8  --log-opt splunk-insecureskipverify=true nginx
+$ docker run -p 80:80 --log-driver=splunk --log-opt splunk-url=http://3.82.230.213:8088 --log-opt splunk-token=b2803d96-aec5-45a8-9071-4b6d74f4958e  --log-opt splunk-insecureskipverify=true nginx
