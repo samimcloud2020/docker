@@ -1,3 +1,0 @@
-In the file, I have co.elastic.logs/enabled: “false” for the filebeat container to prevent the logs generated from this container from being ingested.
-
-The Logging driver has been set to JSON-file. In the future, if the labels is set to true the logs generated would store as a json file format.
