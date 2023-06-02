@@ -1,0 +1,37 @@
+-slim --------------->
+The slim image is a paired down version of the full image. 
+This image generally only installs the minimal packages needed to run your particular tool. 
+In the case of python, that’s the minimum packages to run python and the same for node.js.
+
+By leaving out lesser-used tools, the image is smaller. Use this image 
+if you have space constraints and do not need the full version.
+
+But be sure to test thoroughly when using this image! If you run into unexplained errors, 
+try switching to the full image and see if that resolves it.
+
+-alpine  ---------------------->
+Alpine images are based on the Alpine Linux Project,
+which is an operating system that was built specifically for use inside of containers.
+For a long time, these were the most popular image variations due to their tiny size.
+
+However, some teams are moving away from alpine because these images can cause compatibility 
+issues that are hard to debug. Specifically, if using python images, some wheels are built to 
+be compatible with Debian and will need to be recompiled to work with an Apline-based image.
+
+The main reason to use an Alpine image is to make your resulting image as small as possible.
+The base image will be smaller than 5MB. The python base image (adding python to the base alpine image) 
+is currently 78.9MB. That’s still very small.
+
+This image is the most highly recommended if space is a concern.
+
+The disadvantage is that it does not contain some packages that you might need. Mainly,
+it uses a slimmer musl lib instead of glibc. You may run into issues if your application has specific libc requirements.
+
+If you find the Alpine image is lacking in something you need, you can always install 
+it directly in your Dockerfile. This keeps the image to only what you need. Be aware that 
+your Dockerfile will change if you are installing external packages. The main difference is 
+that you will use apk instead of apt-get to install packages.
+
+There have been concerns regarding -alpine images, so you need to be aware of them. Read about
+some of them here and here and do your own research. Again, if you are experiencing an unexplained
+issue in building your Dockerfile, try switching to the full image to see if that cures it.
