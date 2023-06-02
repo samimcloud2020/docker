@@ -1,0 +1,4 @@
+kibana-----> index pattern create---> filebeat-*   ----> @timestamp ---> cretae
+
+go to discover---> see filebeat-*
+
