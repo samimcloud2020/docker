@@ -243,7 +243,7 @@ root@ip-172-31-86-212:/etc/metricbeat/modules.d# cat docker.yml
     ----------------------------------------------------------
     docker-compose.yml      for elastic search and kibana
     
-    version: "3.7"
+version: "3.7"
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.12.0
@@ -271,7 +271,7 @@ services:
     restart: always
     environment:
       SERVER_NAME: kibana
-      ELASTICSEARCH_HOSTS: http://3.86.32.6:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
     ports:
       - "5601:5601"
     depends_on:
