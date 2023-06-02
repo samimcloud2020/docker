@@ -1,0 +1,28 @@
+$ docker run -d  -p  8001:5000 --name c9  -v  $PWD:/app   image1
+8b99548018b1e9fde85100fb7f6f8a96400f6beaf5a1668f2e9e7fd38ddeb411
+[node1] (local) root@192.168.0.18 ~/xxx
+$ docker exec -it c9 sh
+# cd /app
+# ls
+Dockerfile  app.py  app.pyc  requirements.txt
+# cat app.py
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return 'Hello jio'
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)# ls -la
+total 16
+drwxr-xr-x 2 root root  77 Jun  2 18:14 .
+drwxr-xr-x 1 root root  17 Jun  2 18:13 ..
+-rw------- 1 root root 264 Jun  2 18:12 Dockerfile
+-rw------- 1 root root 187 Jun  2 18:14 app.py
+-rw------- 1 root root 457 Jun  2 18:13 app.pyc
+-rw------- 1 root root  12 Jun  2 16:55 requirements.txt
+# 
+( see all files inside container are under root user)
+
