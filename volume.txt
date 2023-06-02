@@ -1,0 +1,51 @@
+why volume come?
+because when you change code its not auto reflected to container.
+so by volume we can do that
+
+app.py-------------->
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return 'Hello world'
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
+
+
+
+$ docker run -it  -p  7000:5000 --name c8 -e FLASK_APP=app.py -e FLASK_DEBUG=1 -v  $PWD:/app --rm   image1 --->host at $PWD and /app in container
+ * Serving Flask app "app.py" (lazy loading)
+ * Environment: production
+   WARNING: Do not use the development server in a production environment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+ * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 156-797-107
+172.19.0.1 - - [02/Jun/2023 17:53:02] "GET / HTTP/1.1" 200 -
+172.19.0.1 - - [02/Jun/2023 17:53:02] "GET /favicon.ico HTTP/1.1" 404 -
+
+now let change app.py ------------------>
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return 'Hello samim'
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
+    
+    
+    
+    
+ * Detected change in '/app/app.py', reloading   ----------------------> see detected
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 156-797-107
+172.19.0.1 - - [02/Jun/2023 17:54:05] "GET / HTTP/1.1" 200 -
