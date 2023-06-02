@@ -22,3 +22,147 @@ $ echo "c2FtaW1ic25sOk1vbmExMjM0Kg==" | base64 -d
 samimbsnl:Mona1234*
 
 -----------------------------------------------------------------------------------------------------
+$ ls
+Dockerfile        app.py            requirements.txt
+[node1] (local) root@192.168.0.18 ~/xxx
+$ cat app.py
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return 'Hello world'
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
+    
+    
+$ cat Dockerfile
+FROM python:2.7-alpine
+RUN mkdir /app
+WORKDIR /app
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+COPY . .
+LABEL maintainers="samim patel <samim1000@gmail.com>" \
+             version="1.0"
+CMD flask run --host=0.0.0.0 --port=5000
+
+
+$ cat requirements.txt
+Flask==1.0.2
+
+$ docker build -t image1 .
+
+$ docker image history image1
+IMAGE          CREATED              CREATED BY                                      SIZE      COMMENT
+33b655688310   About a minute ago   CMD ["/bin/sh" "-c" "flask run --host=0.0.0.…   0B        buildkit.dockerfile.v0
+<missing>      About a minute ago   LABEL maintainers=samim patel <samim1000@gma…   0B        buildkit.dockerfile.v0
+<missing>      About a minute ago   COPY . . # buildkit                             467B      buildkit.dockerfile.v0
+<missing>      About a minute ago   RUN /bin/sh -c pip install -r requirements.t…   11.4MB    buildkit.dockerfile.v0
+<missing>      About a minute ago   COPY requirements.txt requirements.txt # bui…   12B       buildkit.dockerfile.v0
+<missing>      About a minute ago   WORKDIR /app                                    0B        buildkit.dockerfile.v0
+<missing>      About a minute ago   RUN /bin/sh -c mkdir /app # buildkit            0B        buildkit.dockerfile.v0
+<missing>      3 years ago          /bin/sh -c #(nop)  CMD ["python2"]              0B        
+<missing>      3 years ago          /bin/sh -c set -ex;   wget -O get-pip.py "$P…   6.33MB    
+<missing>      3 years ago          /bin/sh -c #(nop)  ENV PYTHON_GET_PIP_SHA256…   0B        
+<missing>      3 years ago          /bin/sh -c #(nop)  ENV PYTHON_GET_PIP_URL=ht…   0B        
+<missing>      3 years ago          /bin/sh -c #(nop)  ENV PYTHON_PIP_VERSION=20…   0B        
+<missing>      3 years ago          /bin/sh -c set -ex  && apk add --no-cache --…   58.7MB    
+<missing>      3 years ago          /bin/sh -c #(nop)  ENV PYTHON_VERSION=2.7.18    0B        
+<missing>      3 years ago          /bin/sh -c #(nop)  ENV GPG_KEY=C01E1CAD5EA2C…   0B        
+<missing>      3 years ago          /bin/sh -c apk add --no-cache ca-certificates   553kB     
+<missing>      3 years ago          /bin/sh -c #(nop)  ENV PYTHONIOENCODING=UTF-8   0B        
+<missing>      3 years ago          /bin/sh -c #(nop)  ENV LANG=C.UTF-8             0B        
+<missing>      3 years ago          /bin/sh -c #(nop)  ENV PATH=/usr/local/bin:/…   0B        
+<missing>      3 years ago          /bin/sh -c #(nop)  CMD ["/bin/sh"]              0B        
+<missing>      3 years ago          /bin/sh -c #(nop) ADD file:0c4555f363c2672e3…   5.6MB    
+
+$ docker run -d -p 5001:5000 --name c1 -e FLASK_APP=app.py image1    ----> -e for env variable
+c3ab7b6db42bb7159cdb55e7cb3ec732169f6da6a6b90a4476acd9c17dae0aa9
+
+or
+
+$ docker run -d -p 5003:5000 --name c3  image1
+abc47429dccfc311e9fd243cefa6d223ef2b6f36964b0df4094ba10b080da199
+
+--------------------------------------------------------------
+unning containers with --rm flag is good for those containers that you use for very short while just to accomplish something,
+e.g., compile your application inside a container, or just testing something that it works, and then you are know it's a 
+short lived container and you tell your Docker daemon that once it's done running, erase everything related to it 
+and save the disk space.
+
+The flag --rm is used when you need the container to be deleted after the task for it is complete.
+$ docker run -it -p  5005:5000 --name c5 --rm  image1
+ * Environment: production
+   WARNING: Do not use the development server in a production environment.
+   Use a production WSGI server instead.
+ * Debug mode: off
+ * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+^C
+[node1] (local) root@192.168.0.18 ~/xxx
+$ docker ps
+(not seen container c5, as --rm flag, after execution and ctrl+c , container removed)
+--------------------------------------------------------------------------------------------
+$ docker stats
+CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O   PIDS
+5cbed89cd4ca   c4        0.03%     23.62MiB / 31.42GiB   0.07%     4.08kB / 2.07kB   0B / 0B     1
+abc47429dccf   c3        0.02%     23.24MiB / 31.42GiB   0.07%     4.16kB / 2.07kB   0B / 0B     1
+c3ab7b6db42b   c1        0.02%     23.56MiB / 31.42GiB   0.07%     4.16kB / 2.07kB   0B / 0B     1
+----------------------------------------------------------------------------------------------
+The docker logs --details command will add on extra attributes, such as environment variables and labels,
+provided to --log-opt when creating the container.
+
+$ docker logs --details c4
+  * Environment: production
+    WARNING: Do not use the development server in a production environment.
+    Use a production WSGI server instead.
+  * Debug mode: off
+  * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+ 172.19.0.1 - - [02/Jun/2023 17:04:35] "GET / HTTP/1.1" 200 -
+ 172.19.0.1 - - [02/Jun/2023 17:04:35] "GET /favicon.ico HTTP/1.1" 404 -
+ 
+ $ docker logs -f c4 
+ ------------------------------------------------------------------------------------------
+ $ docker run -d -p  5000 --name c6  image1
+d392b8ac497f77413d41d109087cd120614c11e25b5f2c62b02619809e6c49d6
+
+$ docker ps 
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                     NAMES
+d392b8ac497f   image1    "/bin/sh -c 'flask r…"   15 seconds ago   Up 14 seconds   0.0.0.0:32768->5000/tcp   c6
+(if you not define host port then its gives arbitary)
+------------------------------------------------------------------------------------
+ Docker recommends that you use restart policies, and avoid using process managers to start containers.
+ no	-------------->
+ Do not automatically restart the container. (the default)
+ 
+on-failure[:max-retries]	------------->
+Restart the container if it exits due to an error, which manifests as a non-zero exit code. Optionally, limit the number of times the Docker daemon attempts to restart the container using the :max-retries option.
+
+always	--------------->
+Always restart the container if it stops. If it is manually stopped, it is restarted only when Docker daemon restarts or the container itself is manually restarted. (See the second bullet listed in restart policy details)
+
+unless-stopped	----------------->
+Similar to always, except that when the container is stopped (manually or otherwise), it is not restarted even after Docker daemon restarts.
+
+$ docker run -d -p  6000:5000 --name c7 --restart unless-stopped   image1
+5201bc8ea79618f801cd70f0da3ab78348a387e2a25a738355f5a58a9b961136
+[node1] (local) root@192.168.0.18 ~/xxx
+$ docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                     NAMES
+5201bc8ea796   image1    "/bin/sh -c 'flask r…"   6 seconds ago    Up 5 seconds    0.0.0.0:6000->5000/tcp    c7
+
+[node1] (local) root@192.168.0.18 ~/xxx
+$ docker stop 5201bc8ea796
+5201bc8ea796
+[node1] (local) root@192.168.0.18 ~/xxx
+$ docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                     NAMES
+
+(see when stopped , as due to --restart unless-stopped, container not restarted and goes exit stage)
+$ docker ps -a
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS                            PORTS                     NAMES
+5201bc8ea796   image1    "/bin/sh -c 'flask r…"   2 minutes ago    Exited (137) About a minute ago                             c7
+-------------------------------------------------------------------------------------------------------
+
