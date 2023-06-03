@@ -1,0 +1,303 @@
+$ mkdir xxx
+[node1] (local) root@192.168.0.8 ~
+$ cd xxx
+[node1] (local) root@192.168.0.8 ~/xxx
+$ touch Dockerfile
+[node1] (local) root@192.168.0.8 ~/xxx
+$ touch requirements.txt
+[node1] (local) root@192.168.0.8 ~/xxx
+$ touch app.py
+[node1] (local) root@192.168.0.8 ~/xxx
+$ cat app.py
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return 'Hello world'
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
+    
+$ cat Dockerfile
+FROM python:2.7-alpine
+RUN mkdir /app
+WORKDIR /app
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+COPY . .
+LABEL maintainers="samim patel <samim1000@gmail.com>" \
+             version="1.0"
+CMD flask run --host=0.0.0.0 --port=5000
+
+
+$ cat requirements.txt
+Flask==1.0.2
+
+$ docker build -t image1 .
+[+] Building 10.0s (11/11) FINISHED                                                                                                    
+ => [internal] load .dockerignore                                                                                                 0.0s
+ => => transferring context: 2B                                                                                                   0.0s
+ => [internal] load build definition from Dockerfile                                                                              0.0s
+ => => transferring dockerfile: 305B                                                                                              0.0s
+ => [internal] load metadata for docker.io/library/python:2.7-alpine                                                              0.3s
+ => [1/6] FROM docker.io/library/python:2.7-alpine@sha256:724d0540eb56ffaa6dd770aa13c3bc7dfc829dec561d87cb36b2f5b9ff8a760a        2.9s
+ => => resolve docker.io/library/python:2.7-alpine@sha256:724d0540eb56ffaa6dd770aa13c3bc7dfc829dec561d87cb36b2f5b9ff8a760a        0.0s
+ => => extracting sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819                                         0.3s
+ => => sha256:724d0540eb56ffaa6dd770aa13c3bc7dfc829dec561d87cb36b2f5b9ff8a760a 1.65kB / 1.65kB                                    0.0s
+ => => sha256:b9ca0d225d42fd188bd636148229d121586fe7dcf3dcccfb23237b6401df4951 1.16kB / 1.16kB                                    0.0s
+ => => sha256:8579e446340f415fece00398a37dbdc4fff1f16901af2e173d6ae8c0bdbb9505 7.51kB / 7.51kB                                    0.0s
+ => => sha256:aad63a9339440e7c3e1fff2b988991b9bfb81280042fa7f39a5e327023056819 2.80MB / 2.80MB                                    0.1s
+ => => sha256:259d822268fbc4235d84b0d1faa8a4ff933c0a92944c91b096a41066701f78d2 301.29kB / 301.29kB                                0.1s
+ => => sha256:10ba96d218d3fd7421879dbfa14bc0d3938be28dc820993773c2621dd57993fd 20.28MB / 20.28MB                                  0.3s
+ => => sha256:44ba9f6a4209726dd57b562c3913b59c103767d1065f54bef7fbddabcc009431 1.89MB / 1.89MB                                    0.2s
+ => => extracting sha256:259d822268fbc4235d84b0d1faa8a4ff933c0a92944c91b096a41066701f78d2                                         0.1s
+ => => extracting sha256:10ba96d218d3fd7421879dbfa14bc0d3938be28dc820993773c2621dd57993fd                                         1.5s
+ => => extracting sha256:44ba9f6a4209726dd57b562c3913b59c103767d1065f54bef7fbddabcc009431                                         0.4s
+ => [internal] load build context                                                                                                 0.0s
+ => => transferring context: 588B                                                                                                 0.0s
+ => [2/6] RUN mkdir /app                                                                                                          0.6s
+ => [3/6] WORKDIR /app                                                                                                            0.0s
+ => [4/6] COPY requirements.txt requirements.txt                                                                                  0.1s
+ => [5/6] RUN pip install -r requirements.txt                                                                                     5.5s
+ => [6/6] COPY . .                                                                                                                0.1s
+ => exporting to image                                                                                                            0.4s
+ => => exporting layers                                                                                                           0.4s
+ => => writing image sha256:e2328714171b87a97a735482f1c52c2d2561637e6de660bdd54e05c9b7b0e1e8                                      0.0s
+ => => naming to docker.io/library/image1    
+ 
+ 
+ -------------------------------------default network bridge----------------------------------------------------------
+ $ docker run -itd -p 5000:5000 --name c1 --rm -e FLASK_APP=app.py -e FLASK_DEBUG=1 -v $PWD:/app image1 
+f89da35eb419d8e8f49970cda03b2bfbf6778d5304850890712bb538b74d8a4d
+
+$ docker run -itd --rm -p 6379:6379 --name c2 redis:3.2-alpine
+Unable to find image 'redis:3.2-alpine' locally
+3.2-alpine: Pulling from library/redis
+4fe2ade4980c: Pull complete 
+fb758dc2e038: Pull complete 
+989f7b0c858b: Pull complete 
+42b4b9f869ad: Pull complete 
+17e06138ef20: Pull complete 
+c0ecd66db81e: Pull complete 
+Digest: sha256:e9083e10f5f81d350a3f687d582aefd06e114890b03e7f08a447fa1a1f66d967
+Status: Downloaded newer image for redis:3.2-alpine
+75c6406aa1f950e25156b1bafb45ba2f4528d9255d8755eb89d61b22baa753c5
+
+$ docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+17e6fc35a8cb   bridge    bridge    local
+2768fd697726   host      host      local
+26dd3781ba24   none      null      local
+
+
+$ docker network inspect bridge
+[
+    {
+        "Name": "bridge",
+        "Id": "17e6fc35a8cb132e8d2a2cbcc00a45b11f249135a94905cc7b69d3a3129d696f",
+        "Created": "2023-06-03T03:11:34.737768846Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.17.0.0/16",
+                    "Gateway": "172.17.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {
+            "75c6406aa1f950e25156b1bafb45ba2f4528d9255d8755eb89d61b22baa753c5": {
+                "Name": "c2",
+                "EndpointID": "589ef5b2a58fb18aa67849a30785cfee2a4eab08b1bddb8566ca33988540ec51",
+                "MacAddress": "02:42:ac:11:00:03",
+                "IPv4Address": "172.17.0.3/16",
+                "IPv6Address": ""
+            },
+            "f89da35eb419d8e8f49970cda03b2bfbf6778d5304850890712bb538b74d8a4d": {
+                "Name": "c1",
+                "EndpointID": "69b9dade254dedcf10acc600f10956d91ce57fe065ee5e3dba03d863b39fc4f3",
+                "MacAddress": "02:42:ac:11:00:02",
+                "IPv4Address": "172.17.0.2/16",
+                "IPv6Address": ""
+            }
+        },
+        "Options": {
+            "com.docker.network.bridge.default_bridge": "true",
+            "com.docker.network.bridge.enable_icc": "true",
+            "com.docker.network.bridge.enable_ip_masquerade": "true",
+            "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+            "com.docker.network.bridge.name": "docker0",
+            "com.docker.network.driver.mtu": "1500"
+        },
+        "Labels": {}
+    }
+]
+
+$ docker  exec c1 ping 172.17.0.3  ---> container flask pinging redis container ip 
+PING 172.17.0.3 (172.17.0.3): 56 data bytes
+64 bytes from 172.17.0.3: seq=0 ttl=64 time=0.616 ms
+64 bytes from 172.17.0.3: seq=1 ttl=64 time=0.130 ms
+
+
+$ docker exec -it c1 sh
+/app # apk update
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.11/main/x86_64/APKINDEX.tar.gz
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.11/community/x86_64/APKINDEX.tar.gz
+v3.11.13-12-g2cfa91a2b4 [http://dl-cdn.alpinelinux.org/alpine/v3.11/main]
+v3.11.11-124-gf2729ece5a [http://dl-cdn.alpinelinux.org/alpine/v3.11/community]
+OK: 11290 distinct packages available
+/app # apk add curl
+(1/3) Installing nghttp2-libs (1.40.0-r1)
+(2/3) Installing libcurl (7.79.1-r0)
+(3/3) Installing curl (7.79.1-r0)
+Executing busybox-1.31.1-r9.trigger
+OK: 12 MiB in 35 packages
+/app # apk add iputils-ping
+ERROR: unsatisfiable constraints:
+  iputils-ping (missing):
+    required by: world[iputils-ping]
+/app # ping c2
+ping: bad address 'c2'
+/app # curl c2
+curl: (6) Could not resolve host: c2
+/app # 
+
+
+---------------------------------bridge network----------------------------------------------------------
+$ docker network create net1
+063ee5ac55f17c2574af2714e81a501366d25366cce907b8407a2f17443ce5db
+[node1] (local) root@192.168.0.8 ~/xxx
+$ docker run -itd -p 5000:5000 --name c1 --rm -e FLASK_APP=app.py -e FLASK_DEBUG=1 -v $PWD:/app --net net1 image1 
+e80dadcb0d33cec6d9ab55526de57849843f17afcfea5dba42f8887e05002326
+[node1] (local) root@192.168.0.8 ~/xxx
+$ docker run -itd --rm -p 6379:6379 --name c2 --net net1 redis:3.2-alpine
+0c1c607c20c65514ad8edfee40284cad4164c150d542b2975a215292181f2ba0
+[node1] (local) root@192.168.0.8 ~/xxx
+$ docker ps
+CONTAINER ID   IMAGE              COMMAND                  CREATED          STATUS          PORTS                    NAMES
+0c1c607c20c6   redis:3.2-alpine   "docker-entrypoint.s…"   6 seconds ago    Up 5 seconds    0.0.0.0:6379->6379/tcp   c2
+e80dadcb0d33   image1             "/bin/sh -c 'flask r…"   30 seconds ago   Up 28 seconds   0.0.0.0:5000->5000/tcp   c1
+[node1] (local) root@192.168.0.8 ~/xxx
+$ docker network inspect net1
+[
+    {
+        "Name": "net1",
+        "Id": "063ee5ac55f17c2574af2714e81a501366d25366cce907b8407a2f17443ce5db",
+        "Created": "2023-06-03T03:34:49.170334482Z",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "172.19.0.0/16",
+                    "Gateway": "172.19.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {
+            "0c1c607c20c65514ad8edfee40284cad4164c150d542b2975a215292181f2ba0": {
+                "Name": "c2",
+                "EndpointID": "42a876647ecffe596dede7949f70c00ab9ca76e94fb2612dd36b00edd1facab1",
+                "MacAddress": "02:42:ac:13:00:03",
+                "IPv4Address": "172.19.0.3/16",
+                "IPv6Address": ""
+            },
+            "e80dadcb0d33cec6d9ab55526de57849843f17afcfea5dba42f8887e05002326": {
+                "Name": "c1",
+                "EndpointID": "0b0a889cd1eb72cf7f913f3a634e79ad8dd5e08a9fd1803cf50db55c4438e281",
+                "MacAddress": "02:42:ac:13:00:02",
+                "IPv4Address": "172.19.0.2/16",
+                "IPv6Address": ""
+            }
+        },
+        "Options": {},
+        "Labels": {}
+    }
+]
+
+
+$ docker exec -it c1 ping 172.19.0.3
+PING 172.19.0.3 (172.19.0.3): 56 data bytes
+64 bytes from 172.19.0.3: seq=0 ttl=64 time=0.509 ms
+64 bytes from 172.19.0.3: seq=1 ttl=64 time=0.183 ms
+64 bytes from 172.19.0.3: seq=2 ttl=64 time=0.111 ms
+64 bytes from 172.19.0.3: seq=3 ttl=64 time=0.184 ms
+64 bytes from 172.19.0.3: seq=4 ttl=64 time=0.091 ms
+64 bytes from 172.19.0.3: seq=5 ttl=64 time=0.098 ms
+64 bytes from 172.19.0.3: seq=6 ttl=64 time=0.095 ms
+64 bytes from 172.19.0.3: seq=7 ttl=64 time=0.123 ms
+^C
+--- 172.19.0.3 ping statistics ---
+8 packets transmitted, 8 packets received, 0% packet loss
+round-trip min/avg/max = 0.091/0.174/0.509 ms
+[node1] (local) root@192.168.0.8 ~/xxx
+$ docker exec -it c1 ping c2
+PING c2 (172.19.0.3): 56 data bytes
+64 bytes from 172.19.0.3: seq=0 ttl=64 time=0.123 ms
+64 bytes from 172.19.0.3: seq=1 ttl=64 time=0.133 ms
+64 bytes from 172.19.0.3: seq=2 ttl=64 time=0.108 ms
+^C
+--- c2 ping statistics ---
+3 packets transmitted, 3 packets received, 0% packet loss
+round-trip min/avg/max = 0.108/0.121/0.133 ms
+
+( in bridge network , due to dns resolution you ping ip and hostname)
+( but in default bridge network, you ping ip , not hostname as no dns resolution)
+---------------------------------------------------------------------------------------------------------------
+
+from flask import Flask
+from flask_redis import FlaskRedis
+
+app = Flask(__name__)
+app.config['REDIS_URL'] = 'redis://redis:6379/0'
+
+redis = FlaskRedis(app)
+
+
+@app.route('/')
+def counter():
+    return str(redis.incr('web2_counter'))
+
+$ docker run -itd -p 5000:5000 --name web1  --rm -e FLASK_APP=app.py -e FLASK_DEBUG=1 -v $PWD:/app --net net1 image1
+71f964847cc9510326fbea8cbfa326e09c5004056e0e72a3a10c3137caed5f1f
+
+$ docker run -itd -p 6379:6379 --name redis --net net1 --rm  redis:3.2-alpine 
+ff51440d573961a0db3341f3f0bbc640476f3932d58028af45a5677715f35c79
+
+ docker exec -it redis redis-cli 
+127.0.0.1:6379> KEYS *
+1) "web2_counter"
+127.0.0.1:6379> INCRBY web2_counter 50000000000
+(integer) 50000000010
+127.0.0.1:6379> 
+
+
+----------------------------------------------------------------------------
+
+NOTE:
+bridge driver ----------> only one host
+overlay network---------> more than one host
+---------------------------------------------
