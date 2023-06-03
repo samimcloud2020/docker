@@ -1,0 +1,9 @@
+$ docker plugin install rexray/ebs \
+  EBS_ACCESSKEY=abc \
+  EBS_SECRETKEY=123
+$ docker plugin install rexray/driver:latest
+$ docker volume create --driver driver1 \
+    --opt tardis=blue \
+    --opt timey=wimey \
+    foo
+    
