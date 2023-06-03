@@ -7,3 +7,42 @@ $ docker volume create --driver driver1 \
     --opt timey=wimey \
     foo
     
+-----------------------------------------------------------
+$ docker-compose up -d
+[+] Building 0.0s (0/0)                                                                                          
+[+] Running 3/3
+ ✔ Network flask-samim_net1       Created                                                                   0.0s 
+ ✔ Container flask-samim-web1-1   Started                                                                   0.6s 
+ ✔ Container flask-samim-redis-1  Started                                                                   1.0s 
+[node1] (local) root@192.168.0.13 ~/xxx
+$ docker volume ls
+DRIVER    VOLUME NAME
+local     67c770cee485b06239594dd9b6dcdb4d5482f7163ec0f64555cfa3fcca814bd1
+local     216398c747feea18275fa9e46d34ee9193e2cbb390e44e8c9ee9696c4a97a698
+local     e8a4bd33d1db21f5b3b6a3d8c4cab4da4fd3a559da212eeb35e46e500f493cfd
+local     flask-samim_vol1
+[node1] (local) root@192.168.0.13 ~/xxx
+$ docker volume inspect flask-samim_vol1
+[
+    {
+        "CreatedAt": "2023-06-03T09:57:05Z",
+        "Driver": "local",
+        "Labels": {
+            "com.docker.compose.project": "flask-samim",
+            "com.docker.compose.version": "2.18.1",
+            "com.docker.compose.volume": "vol1"
+        },
+        "Mountpoint": "/var/lib/docker/volumes/flask-samim_vol1/_data",
+        "Name": "flask-samim_vol1",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+[node1] (local) root@192.168.0.13 ~/xxx
+$ ls -la /var/lib/docker/volumes/flask-samim_vol1/_data
+total 4
+drwxr-xr-x    2 999      1000            22 Jun  3 10:03 .
+drwx-----x    3 root     root            19 Jun  3 09:57 ..
+-rw-------    1 999      1000           110 Jun  3 10:03 dump.rdb
+[node1] (local) root@192.168.0.13 ~/xxx
+$ cat dump.rdb
