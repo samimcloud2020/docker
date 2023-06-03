@@ -1,0 +1,16 @@
+oot@ip-172-31-83-24:~/ppp# docker plugin disable  rexray/ebs
+rexray/ebs
+
+root@ip-172-31-83-24:~/ppp# docker plugin rm rexray/ebs
+rexray/ebs
+
+root@ip-172-31-83-24:~/ppp# docker plugin install rexray/ebs:latest REXRAY_PREEMPT=true EBS_REGION=us-east-1 EBS_ACCESSKEY=AKIAUHTRPTRZ2NH3WIES EBS_SECRETKEY=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 --grant-all-permissions EBS_ENDPOINT=ec2.us-east-1.amazonaws.com EBS_USELARGEDEVICERANGE=true
+latest: Pulling from rexray/ebs
+Digest: sha256:bbe1cfc5241d765c735e1d80fd790a0fc50e2e7064239255c4b61397a16c3355
+713b84867e46: Complete 
+Installed plugin rexray/ebs:latest
+
+
+root@ip-172-31-83-24:~/ppp# docker volume create --driver rexray/ebs:latest  --name aws-vol1
+aws-vol1
+
