@@ -1,0 +1,67 @@
+$ docker plugin install rexray/efs \
+  EFS_ACCESSKEY=abc \
+  EFS_SECRETKEY=123 \
+  EFS_SECURITYGROUPS="sg-123 sg-456" \
+  EFS_TAG=rexray
+
+
+Plugin "rexray/efs" is requesting the following privileges:
+ - network: [host]
+ - mount: [/dev]
+ - allow-all-devices: [true]
+ - capabilities: [CAP_SYS_ADMIN]
+Do you grant the above permissions? [y/N] y
+latest: Pulling from rexray/efs
+Digest: sha256:b7954205cc98b7ba303af3d9bd87ab5dc14fb0b83ebbedbb9a670741e089f985
+8d57a566fb53: Complete 
+Installed plugin rexray/efs
+
+
+
+root@ip-172-31-83-24:~/xxx# docker plugin list
+ID             NAME                DESCRIPTION              ENABLED
+8e611ba59f79   rexray/ebs:latest   REX-Ray for Amazon EBS   true
+cbb140e3bacc   rexray/efs:latest   REX-Ray for Amazon EFS   true
+
+
+
+root@ip-172-31-83-24:~/xxx# docker volume create --driver rexray/efs:latest --name aws-efs-vol1
+aws-efs-vol1
+
+aws console----> efs----> check one efs filesystem cfeated
+
+
+version: '3'
+
+services:
+  web1:
+    build: .
+    env_file:
+      - '.env'
+    ports:
+      - '5000:5000'
+    volumes:
+      - 'aws-efs-vol1:/app'
+    networks:
+      - 'net1'  
+
+  redis:
+    depends_on:
+      - 'web1'
+    image: redis:alpine
+    env_file:
+      - '.env'
+    ports:
+      - '6379:6379'
+    volumes:
+      - 'aws-efs-vol1:/data'
+    networks:
+      - 'net1'  
+
+volumes:
+  aws-efs-vol1: 
+    driver: 'rexray/efs' 
+networks:
+  net1: 
+   
+   
