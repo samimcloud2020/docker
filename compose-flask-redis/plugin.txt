@@ -1,12 +1,145 @@
 $ docker plugin install rexray/ebs \
   EBS_ACCESSKEY=abc \
   EBS_SECRETKEY=123
-$ docker plugin install rexray/driver:latest
-$ docker volume create --driver driver1 \
-    --opt tardis=blue \
-    --opt timey=wimey \
-    foo
-    
+  
+  Plugin "rexray/ebs" is requesting the following privileges:
+ - network: [host]
+ - mount: [/dev]
+ - allow-all-devices: [true]
+ - capabilities: [CAP_SYS_ADMIN]
+Do you grant the above permissions? [y/N] Y
+latest: Pulling from rexray/ebs
+Digest: sha256:bbe1cfc5241d765c735e1d80fd790a0fc50e2e7064239255c4b61397a16c3355
+713b84867e46: Complete 
+Installed plugin rexray/ebs
+
+root@ip-172-31-83-24:~/xxx# docker plugin list
+ID             NAME                DESCRIPTION              ENABLED
+8e611ba59f79   rexray/ebs:latest   REX-Ray for Amazon EBS   true
+
+
+$ docker plugin install rexray/driver:latest   ----------> not needed
+
+root@ip-172-31-83-24:~/xxx# docker volume create --driver rexray/ebs:latest
+c476b1a7dd4770ac83976fdab83807e490b7a973b8ff5e70fa80fa535f74a448
+
+
+root@ip-172-31-83-24:~/xxx# docker volume ls
+DRIVER              VOLUME NAME
+rexray/ebs:latest   c476b1a7dd4770ac83976fdab83807e490b7a973b8ff5e70fa80fa535f74a448   ----------> volume is rexray/ebs:latest
+local               fef84ca897b7f223810226d8c13a54eeed86789fc45a10e895c41cc102b59756   -----------> local
+
+
+root@ip-172-31-83-24:~/xxx# docker volume inspect c476b1a7dd4770ac83976fdab83807e490b7a973b8ff5e70fa80fa535f74a448
+[
+    {
+        "CreatedAt": "0001-01-01T00:00:00Z",
+        "Driver": "rexray/ebs:latest",
+        "Labels": {},
+        "Mountpoint": "",
+        "Name": "c476b1a7dd4770ac83976fdab83807e490b7a973b8ff5e70fa80fa535f74a448",
+        "Options": {},
+        "Scope": "global",
+        "Status": {
+            "availabilityZone": "us-east-1b",  --------------> volume on us-east-1b
+            "fields": null,
+            "iops": 0,
+            "name": "c476b1a7dd4770ac83976fdab83807e490b7a973b8ff5e70fa80fa535f74a448",
+            "server": "ebs",
+            "service": "ebs",
+            "size": 16,
+            "type": "standard"
+        }
+    }
+]
+
+
+
+root@ip-172-31-83-24:~/xxx# docker volume inspect fef84ca897b7f223810226d8c13a54eeed86789fc45a10e895c41cc102b59756
+[
+    {
+        "CreatedAt": "2023-06-03T12:40:33Z",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/fef84ca897b7f223810226d8c13a54eeed86789fc45a10e895c41cc102b59756/_data",
+        "Name": "fef84ca897b7f223810226d8c13a54eeed86789fc45a10e895c41cc102b59756",
+        "Options": null,
+        "Scope": "local"   -----------------------> local volume name
+    }
+]
+
+IN AWS EC2--->VOLUME------->
+c476b1a7dd4770ac83976fdab83807e490b7a973b8ff5e70fa80fa535f74a448
+vol-091ee9fa8a880dd48	standard	16 GiB	-     -----------------------------> CREATED
+
+------------------------------------------------------------main note---------------------
+$ docker plugin install rexray/ebs \
+  EBS_ACCESSKEY=abc \
+  EBS_SECRETKEY=123
+  
+  Plugin "rexray/ebs" is requesting the following privileges:
+ - network: [host]
+ - mount: [/dev]
+ - allow-all-devices: [true]
+ - capabilities: [CAP_SYS_ADMIN]
+Do you grant the above permissions? [y/N] Y
+latest: Pulling from rexray/ebs
+Digest: sha256:bbe1cfc5241d765c735e1d80fd790a0fc50e2e7064239255c4b61397a16c3355
+713b84867e46: Complete 
+Installed plugin rexray/ebs
+
+root@ip-172-31-83-24:~/xxx# docker plugin list
+ID             NAME                DESCRIPTION              ENABLED
+8e611ba59f79   rexray/ebs:latest   REX-Ray for Amazon EBS   true
+
+
+
+root@ip-172-31-83-24:~/xxx# docker volume create --driver rexray/ebs --name test-vol-1
+test-vol-1
+root@ip-172-31-83-24:~/xxx# docker volume inspect test-vol-1
+[
+    {
+        "CreatedAt": "0001-01-01T00:00:00Z",
+        "Driver": "rexray/ebs:latest",
+        "Labels": {},
+        "Mountpoint": "",
+        "Name": "test-vol-1",
+        "Options": {},
+        "Scope": "global",
+        "Status": {
+            "availabilityZone": "us-east-1b",
+            "fields": null,
+            "iops": 0,
+            "name": "test-vol-1",
+            "server": "ebs",
+            "service": "ebs",
+            "size": 16,
+            "type": "standard"
+        }
+    }
+]
+
+
+
+$ docker volume ls
+DRIVER          VOLUME NAME
+rexray/ebs      test-vol-1
+
+
+$ docker volume inspect test-vol-1
+
+
+root@ip-172-31-83-24:~/xxx# docker run -itd -p 80:80 -v test-vol-1:/var/www/html --name apache --rm ubuntu/apache2:latest
+5c7386ec96896c0ca5d5d9d70beeda625cadbe9f9b56cf952c81a27b704fc412
+
+root@ip-172-31-83-24:~/xxx# docker exec -it apache sh
+# pwd
+/
+# cd /var/www/html
+# ls
+index.html
+
+
 -----------------------------------------------------------
 $ docker-compose up -d
 [+] Building 0.0s (0/0)                                                                                          
