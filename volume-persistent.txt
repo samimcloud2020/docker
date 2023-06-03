@@ -1,0 +1,93 @@
+requirements.txt-----------
+# Updates:
+#   Nov 2019: Update Flask to 1.1.1
+#   Apr 2022: Update Flask to 2.0.3
+Flask==2.0.3
+flask-redis==0.3
+
+# Hello. This is Nick from the future (Apr 2022 to be exact). A few of Flask's
+# dependencies were recently updated that aren't backwards compatible.
+#
+# These packages are all dependencies of Flask and now we're locking them to
+# a specific version that will work with the version of Flask we're using.
+#itsdangerous==2.0.1
+#markupsafe==2.0.1
+#werkzeug==2.0.3
+#jinja2==3.0.3
+
+Dockerfile---------------
+# Updates:
+#   Nov 2019: Update base Docker image to use a more recent version of Python
+#             You can also use python:3.7.5-slim-buster for a Debian image
+FROM python:3.7.5-alpine
+
+RUN mkdir /app
+WORKDIR /app
+
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+COPY . .
+
+LABEL maintainer="Nick Janetakis <nick.janetakis@gmail.com>" \
+      version="1.0"
+
+VOLUME ["/app/public"]
+
+CMD flask run --host=0.0.0.0 --port=5000
+
+app.py-------------------
+from flask import Flask
+from flask_redis import FlaskRedis
+
+app = Flask(__name__)
+app.config['REDIS_URL'] = 'redis://redis:6379/0'
+
+redis = FlaskRedis(app)
+
+
+@app.route('/')
+def counter():
+    return str(redis.incr('web2_counter'))
+
+
+
+
+
+$ docker network create net1
+24dd64d6d29fee4a602aa5ecbe289ce251a3c6409ce488ed580a7877bf8695ff
+[node1] (local) root@192.168.0.13 ~/xxx
+$ docker volume create vol1
+vol1
+[node1] (local) root@192.168.0.13 ~/xxx
+$ docker volume inspect vol1
+[
+    {
+        "CreatedAt": "2023-06-03T09:22:30Z",
+        "Driver": "local",
+        "Labels": null,
+        "Mountpoint": "/var/lib/docker/volumes/vol1/_data",
+        "Name": "vol1",
+        "Options": null,
+        "Scope": "local"
+    }
+]
+[node1] (local) root@192.168.0.13 ~/xxx
+$ docker run -itd -p 5000:5000 --name web1 --rm -e FLASK_APP=app.py -e FLASK_DEBUG=1 --net net1 -v $PWD:/app image1
+374f2a583bffe6f183405f3d8f3868cd1a0fba7d958ab234a89378626c663b59
+
+
+$ ls -la /var/lib/docker/volumes/vol1/_data
+total 0
+drwxr-xr-x    2 root     root             6 Jun  3 09:22 .
+drwx-----x    3 root     root            19 Jun  3 09:22 ..
+
+still now data present
+-------------as flask app depend on redis and redis container not exist error---------------------
+ConnectionError
+redis.exceptions.ConnectionError: Error -2 connecting to redis:6379. Name does not resolve.
+
+----------------------------------------------------------------------------
+let create redis without volume
+
+
