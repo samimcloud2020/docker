@@ -90,4 +90,43 @@ redis.exceptions.ConnectionError: Error -2 connecting to redis:6379. Name does n
 ----------------------------------------------------------------------------
 let create redis without volume
 
+$ docker run -itd -p 6379:6379 --name redis --rm --net net1 redis:6.2.12-alpine
+50f191d8f55706cfafe06958ee853d63b7fe3d3b225e7eb7bf3dfb2fdf8db09d
+
+now flask app access redis container.
+counter 1--->2---->3
+------------------------------------------------------------
+let stop redis container and again start.
+see counter start from 1. not from 3 as no persistent volume for redis container.
+
+[node1] (local) root@192.168.0.13 ~/xxx
+$ docker stop redis
+redis
+[node1] (local) root@192.168.0.13 ~/xxx
+$ docker run -itd -p 6379:6379 --name redis --rm --net net1 redis:6.2.12-alpine
+05a4329a8c76a44f020dd1b0da4ff33b65f4290bac43d91f094e6b8fb1553ee3
+
+---------------------------now let redis to attach volume----------------
+$ docker stop redis
+redis
+[node1] (local) root@192.168.0.13 ~/xxx
+$ docker run -itd -p 6379:6379 --name redis --rm --net net1 -v vol1:/data redis:6.2.12-alpine
+b925fc7f3a2ab67995e1ef09dfa6e189847466c33e10d5048035ed797b8c7fb3
+
+vol1 is called named volume.
+
+now counter increase 1-->2--->3 but as redis is memory store its not save.
+so,
+$ docker exec -it redis redis-cli SAVE
+OK
+
+$ docker stop redis
+redis
+[node1] (local) root@192.168.0.13 ~/xxx
+$ docker run -itd -p 6379:6379 --name redis --rm --net net1 -v vol1:/data redis:6.2.12-alpine
+004dc8ad5617bd82c4410f9ba49f429c6744ba7b9ef38c63b60414f5c4711825
+
+after stop and again create redis container , so still volume exist with counter 3 and now increase to 4. ( not 1)
+
+so volume is presisit.
 
