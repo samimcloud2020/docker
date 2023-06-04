@@ -1,0 +1,34 @@
+$ docker system df
+
+$docker system df -v
+
+$ docker system info  ----> about docker installation info
+
+$docker info  ---> docker daemon info
+
+$docker system purne
+
+all stopped containers
+all volumes not used by at least one container
+all networks not used by atleast one container
+all dangling images
+
+$ docker system purne -f ---> forced
+
+$ docker system purne -a ---> remove all unused images (be careful before execute)
+
+$ docker stop aaa bbb ccc
+
+$ docker container stop $(docker container ls -a -q) ---->to stop all containers
+
+
+
+$0 3 * * *  /usr/bin/docker system purne ----> every day 3 am
+
+
+
+
+$ docker image ls ----> know any dangling images(non tag images)
+
+
+
