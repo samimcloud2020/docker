@@ -1,0 +1,99 @@
+version: "3"
+services:
+    db:
+        container_name: mydb
+        depends_on:
+          - 'app'
+        image: mysql:5.7
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+        networks:
+          - 'net1'    
+        volumes:
+          - 'vol1:/var/lib/mysql'  
+    app:
+        container_name: myapp
+        env_file:
+          - '.env'
+        links:
+            - "db"
+        build:                             
+          context: .
+          dockerfile: Dockerfile
+        ports:
+            - "5000:5000"
+        networks:
+          - 'net1'    
+        volumes:
+          - 'vol1:/app/public'      
+    app2:
+        container_name: myapp2
+        command:                     -----> your can run command which overrides of CMD in Dockerfile.
+        env_file:
+          - '.env'
+        links:
+            - "db"
+        build:                             
+          context: .
+          dockerfile: Dockerfile
+        ports:
+            - "5000:5000"
+        networks:
+          - 'net1'    
+        volumes:
+          - 'vol1:/app/public'           
+networks:
+  net1: 
+    driver: bridge
+volumes:
+  vol1:
+    driver: local
+------------------------------
+build: .   ----means Dockerfile in current dir.
+build: ./web/   ---means Dockerfile in web dir
+
+env_file:
+  - '.env'
+  - '.env.stagging'
+  - '.env.production'
+  
+  
+  or
+  environment:
+    FLASK_WEB: app.py
+    FLASK_DEBUG: 1
+    
+    
+    .env having ---> COMPOSE_PROJECT_NAME=flask-samim  so flask-samim_web2_1   , otherwise currend folder_1.
+
+    -----------------------------
+    $docker-compose pull
+    
+    $ docker-compose logs -f
+    
+    $ docker-compose restart
+    $docker-compose restart redis
+    
+    $docker-compose exec -it web2 ls -la
+    
+    
+    $docker-compose build -d ----> -d running background
+    
+    $docker-compose ps
+    $ docker-compose run redis redis-server --version
+    
+    $ docker-compose stop
+    $docker-compose up redis
+    $docker-compose up web2 ---> up web2 and redis as depends_on: 'redis'
+    
+    $ docker-compose rm
+    
+    ---------------------------------------------------
+    $docker-compose build
+    $ docker image ls
+    web2_web
+    -----------------------------------
+    $docker-compose rm -f
+    
