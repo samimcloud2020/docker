@@ -1,0 +1,32 @@
+HOST DIRECTORY ------> CONTAINER DIRECTORY   
+root@ip-172-31-83-24:~/rrr/share# docker run -itd -p 80:80 -v $PWD:/var/www/html --rm ubuntu/apache2:latest
+de59bcfceee4dcecb72b0dc11eaf07c5b2639e02ab1a8ea53aebc2cca33528dd
+root@ip-172-31-83-24:~/rrr/share# docker ps
+CONTAINER ID   IMAGE                   COMMAND                CREATED          STATUS          PORTS                               NAMES
+de59bcfceee4   ubuntu/apache2:latest   "apache2-foreground"   16 seconds ago   Up 15 seconds   0.0.0.0:80->80/tcp, :::80->80/tcp   hopeful_yonath
+root@ip-172-31-83-24:~/rrr/share# docker stop de59
+de59
+root@ip-172-31-83-24:~/rrr/share# docker run -itd -p 80:80 -v $PWD:/var/www/html --rm --name c1 ubuntu/apache2:latest
+2840632be44ba7da733373af855980a5976887a6a1f469324a327f3cc8c4faf6
+root@ip-172-31-83-24:~/rrr/share# docker exec -it c1 sh
+# ls
+bin  boot  dev  etc  home  lib  lib32  lib64  libx32  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+# cd /var/www/html
+# ls
+Dockerfile  app.py  docker-compose.yml  public  requirements.txt
+# touch 1.txt
+# exit
+root@ip-172-31-83-24:~/rrr/share# ls
+1.txt  Dockerfile  app.py  docker-compose.yml  public  requirements.txt
+
+------------------ANNONYMS VOLUME--------------------------------------------------
+root@ip-172-31-83-24:~/rrr/share# docker run -itd -p 80:80 -v /var/www/html --rm --name c1 ubuntu/apache2:latest
+
+its maintained by /var/lib/docker/volumes/------
+
+--------------------named volume----------------------------------
+$ docker volume create vol1
+$ docker run -itd -p 80:80 --rm -v vol1:/var/www/html --name c1 ubuntu/apache2
+
+its maintained by docker in /var/lib/docker/volumes/----
+---------------------------------------------------------------------------------------------------
