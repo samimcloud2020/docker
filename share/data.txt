@@ -1,0 +1,11 @@
+root@ip-172-31-83-24:~/share# docker run -itd -p 5000:5000 --name web2 --rm -e FLASK_APP=app.py -e FLASK_DEBUG=1 -v $PWD:/app --net net1 image1
+5b52dca10511a93bc0fa54ec4dc86c3dd605af0818c7a3072ab53b8a2c203ddb
+root@ip-172-31-83-24:~/share# docker run -itd -p 6379:6379 --name redis --rm --volumes-from web2 --net net1 -v web2_redis:/data redis:3.2-alpine
+a2f2621aa83799f8aa7be0817be27fcd3a1d587c22ef9a0e2414fee839ac1c58
+root@ip-172-31-83-24:~/share# docker exec -it redis sh
+/data # cd /app/public
+/app/public # ls
+main.css
+/app/public # cat main.css
+body { background-color: #ffff00; }
+/app/public # exit
