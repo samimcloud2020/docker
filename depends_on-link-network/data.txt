@@ -1,0 +1,119 @@
+Docker Compose depends_on ---------------------------->
+depends_on is a Docker Compose keyword to set the order in which services must start and stop.
+
+For example, suppose we want our web application, which we'll build as a web-app image, to start after our Postgres container. 
+Let's have a look at the docker-compose.yml file:
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+  web-app:
+    image: web-app:latest
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+Copy
+Docker will pull the images and run the containers based on the given dependencies. So, in this case, 
+the Postgres container is the first in the queue to run.
+
+However, there are limitations because depends_on doesn't explicitly wait for dependencies to be ready.
+
+Let's imagine our web application needs to run some migrations scripts at startup. If the database isn't 
+accepting connections, although the Postgres service has started correctly, we can't execute any script.
+
+However, we can avoid this if we control the startup or shutdown order using specific tools or our own managed scripting.
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Docker Compose links
+links instructs Docker to link containers over a network. When we link containers, Docker creates environment
+variables and adds containers to the known hosts list so they can discover each other.
+
+We'll check out a simple Docker example running a Postgres container and link it to our web application.
+
+First, let's run our Postgres container:
+
+docker run -d --name db -p 5342:5342 postgres:latest 
+Copy
+Then, we link it to our web application:
+
+docker run -d -p 8080:8080 --name web-app --link db 
+Copy
+Let's convert our example to Docker Compose:
+
+services:
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+  web-app:
+    images: web-app:latest
+    ports:
+      - 8080:8080
+    links:
+      - db
+      
+      ----------------------------------------------------------------------------------------------------------------
+      Docker Compose network
+We can find Docker links still in use. However, Docker Compose deprecates it since version 2 because of the introduction of the network.
+
+This way, we can link applications with complex networking, for example, overlay networks.
+
+However, in a standalone application, we can typically use a bridge as the default when we don't specify a network.
+
+Let's remove links and replace it with the network while also adding a volume and environment variables for the database:
+
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+    volumes: 
+      - db:/var/lib/postgresql/data
+    networks:
+      - mynet
+
+  web-app:
+    image:web-app:latest
+    depends_on:
+      - db
+    networks:
+      - mynet
+    ports:
+      - 8080:8080
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: postgres
+
+networks:
+  mynet:
+    driver: bridge
+
+volumes:
+  db:
+    driver: local
+    -------------------------------------------------------------------------------------------------------------
+     Difference Between Docker links and depends_on
+Although they involve expressing dependencies, Docker links and depends_on have different meanings.
+
+While depends_on indicates the order in which the services must start and stop, 
+the links keyword handles the communication of containers over a network.
+
+Furthermore, depends_on is a Docker Compose keyword, while we can similarly use links as a legacy feature of Docker.
+
+--------------------------------------------------------------------------------
