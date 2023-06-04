@@ -15,3 +15,13 @@ body { background-color: #ffff00; }
 
 
 volume--> /app/public declared in Dockerfile as a volume and redis --volumes-from web2 able to access that same volume
+
+root@ip-172-31-83-24:~/share# tree
+.
+├── Dockerfile
+├── __pycache__
+│   └── app.cpython-37.pyc
+├── app.py
+├── public
+│   └── main.css
+└── requirements.txt
