@@ -65,13 +65,13 @@ ru2vgf7bofjv   mydrupal          overlay   swarm
 8845a82df5d5   none              null      local
 
 
-$ docker service create  --name psql --network mydrupal  -e POSTGRES_PASSWORD=password postgres
+$ docker service create  --name psql --network mydrupal  -e POSTGRES_PASSWORD=password postgres:14
 5fcb3u28ac8f525rxsbyurt5c
 overall progress: 1 out of 1 tasks 
 1/1: running   [==================================================>] 
 verify: Service converged 
 
-$ docker service create --name drupal --network mydrupal -p 80:80 drupal
+$ docker service create --name drupal --network mydrupal -p 80:80 drupal:9
 fy1jbrpnvgfu5lxidl0o8y2fs
 overall progress: 1 out of 1 tasks 
 1/1: running   [==================================================>] 
