@@ -1,0 +1,57 @@
+----------------Use swarm mode routing mesh-----------------------------
+Docker Engine swarm mode makes it easy to publish ports for services to make them available to resources outside the swarm. 
+
+All nodes participate in an ingress routing mesh.
+
+The routing mesh enables each node in the swarm to accept connections on published ports for any service running in the swarm,
+even if there’s no task running on the node. 
+
+The routing mesh routes all incoming requests to published ports on available nodes to an active container.
+
+To use the ingress network in the swarm, you need to have the following 
+ports open between the swarm nodes before you enable swarm mode:
+
+Port 7946 TCP/UDP for container network discovery.
+
+Port 4789 UDP (configurable) for the container ingress network.
+
+-----------------------EXTERNAL LB (WITH SERVICE MESH)--------------------------------------------------
+
+Configure an external load balancer🔗-----
+
+You can configure an external load balancer for swarm services, 
+either in combination with the routing mesh or without using the routing mesh at all.
+
+--->Using the routing mesh<----
+You can configure an external load balancer to route requests to a swarm service.
+For example, you could configure HAProxy to balance requests to an nginx service published to port 8080.
+
+----I/C TRAFFIC--> HAPROXY IP:80)----> NODE1 IP: PUBLISHED PORT---> NODE1(task--> CONTAINER)
+
+----I/C TRAFFIC--> HAPROXY IP:80----> NODE2 IP: PUBLISHED PORT---> NODE2(task--> CONTAINER)
+
+----I/C TRAFFIC--> HAPROXY IP:80----> NODE3 IP: PUBLISHED PORT---> NODE3(task--> CONTAINER)
+
+In this case, port 8080 must be open between the load balancer and the nodes in the swarm. 
+The swarm nodes can reside on a private network that is accessible to the proxy server,
+but that is not publicly accessible.
+
+
+---------------------------------EXTERNAL LB (WITHOUT SERVICING MESH)---------------------------------------------------
+Without the routing mesh
+To use an external load balancer without the routing mesh, 
+
+set --endpoint-mode to dnsrr instead of the default value of vip.
+
+In this case, there is not a single virtual IP. 
+
+Instead, Docker sets up DNS entries for the service 
+
+such that a DNS query for the service name returns a list of IP addresses,
+
+and the client connects directly to one of these.
+
+You are responsible for providing 
+the list of IP addresses and ports to your load balancer
+
+---------------------------------------------------------------------------------------------------------
