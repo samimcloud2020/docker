@@ -1,0 +1,120 @@
+Start the registry as a service on your swarm:
+
+$ docker service create --name registry --publish published=5000,target=5000 registry:2
+Check its status with docker service ls:
+
+$ docker service ls
+
+ID            NAME      REPLICAS  IMAGE                                                                               COMMAND
+l7791tpuwkco  registry  1/1       registry:2@sha256:1152291c7f93a4ea2ddc95e46d142c31e743b6dd70e194af9e6ebe530f782c17
+
+Check that it's working with curl:
+
+$ curl http://localhost:5000/v2/
+
+{}
+
+$ docker-compose up -d
+
+WARNING: The Docker Engine you're using is running in swarm mode.
+
+Compose does not use swarm mode to deploy services to multiple nodes in
+a swarm. All containers are scheduled on the current node.
+
+To deploy your application across the swarm, use `docker stack deploy`.
+
+Creating network "stackdemo_default" with the default driver
+Building web
+...(build output)...
+Creating stackdemo_redis_1
+Creating stackdemo_web_1
+
+
+$ docker-compose ps
+
+      Name                     Command               State           Ports
+-----------------------------------------------------------------------------------
+stackdemo_redis_1   docker-entrypoint.sh redis ...   Up      6379/tcp
+stackdemo_web_1     python app.py                    Up      0.0.0.0:8000->8000/tcp
+You can test the app with curl:
+
+$ curl http://localhost:8000
+Hello World! I have been seen 1 times.
+
+$ curl http://localhost:8000
+Hello World! I have been seen 2 times.
+
+$ curl http://localhost:8000
+Hello World! I have been seen 3 times.
+
+$ docker-compose down --volumes
+
+Stopping stackdemo_web_1 ... done
+Stopping stackdemo_redis_1 ... done
+Removing stackdemo_web_1 ... done
+Removing stackdemo_redis_1 ... done
+Removing network stackdemo_default
+
+Push the generated image to the registry
+To distribute the web app's image across the swarm, it needs to be pushed to the registry you set up earlier. With Compose, this is very simple:
+
+$ docker-compose push
+
+Pushing web (127.0.0.1:5000/stackdemo:latest)...
+The push refers to a repository [127.0.0.1:5000/stackdemo]
+5b5a49501a76: Pushed
+be44185ce609: Pushed
+bd7330a79bcf: Pushed
+c9fc143a069a: Pushed
+011b303988d2: Pushed
+latest: digest: sha256:a81840ebf5ac24b42c1c676cbda3b2cb144580ee347c07e1bc80e35e5ca76507 size: 1372
+
+Deploy the stack to the swarm
+Create the stack with docker stack deploy:
+
+$ docker stack deploy --compose-file docker-compose.yml stackdemo
+
+Ignoring unsupported options: build
+
+Creating network stackdemo_default
+Creating service stackdemo_web
+Creating service stackdemo_redis
+
+Check that it's running with docker stack services stackdemo:
+
+$ docker stack services stackdemo
+
+ID            NAME             MODE        REPLICAS  IMAGE
+orvjk2263y1p  stackdemo_redis  replicated  1/1       redis:3.2-alpine@sha256:f1ed3708f538b537eb9c2a7dd50dc90a706f7debd7e1196c9264edeea521a86d
+s1nf0xy8t1un  stackdemo_web    replicated  1/1       127.0.0.1:5000/stackdemo@sha256:adb070e0805d04ba2f92c724298370b7a4eb19860222120d43e0f6351ddbc26f
+
+
+As before, you can test the app with curl:
+
+$ curl http://localhost:8000
+Hello World! I have been seen 1 times.
+
+$ curl http://localhost:8000
+Hello World! I have been seen 2 times.
+
+$ curl http://localhost:8000
+Hello World! I have been seen 3 times.
+Thanks to Docker's built-in routing mesh, you can access any node in the swarm on port 8000 and get routed to the app:
+
+$ curl http://address-of-other-node:8000
+Hello World! I have been seen 4 times.
+Bring the stack down with docker stack rm:
+
+$ docker stack rm stackdemo
+
+Removing service stackdemo_web
+Removing service stackdemo_redis
+Removing network stackdemo_default
+Bring the registry down with docker service rm:
+
+$ docker service rm registry
+If you're just testing things out on a local machine and want to bring your Docker Engine out of swarm mode, use docker swarm leave:
+
+$ docker swarm leave --force
+
+Node left the swarm.
