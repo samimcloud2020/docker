@@ -1,0 +1,4 @@
+drupal:9
+postgres:14
+
+working perfect.
