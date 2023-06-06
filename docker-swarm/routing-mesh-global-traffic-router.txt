@@ -1,0 +1,55 @@
+
+This is a stateless Load balancing.
+
+This lb is L3 (tcp), NOT l4 (DNS). [ SO WORKING ON ip AND port]
+
+both limitation overcome with :   HA PROXY, NGINX PROXY/ DOCKER ENTERPRISE EDITION(BUILT IN L4 PROXY)
+
+Routes ingress (incoming) packets for service to proper task.
+
+spans all nodes in swarm.
+
+uses IPVS from linux kernel.
+
+load balances swarm services across their tasks.
+
+two way work:-----------------------------
+case-1:-----
+container to container on overlay n/w. (by using VIP)
+
+vip(dns name: svc) ------> container of node1, container of node2, container of node3  (all connected to VIP) [round robin fire to nodes]
+
+case-2:--------------------------------
+
+External traffic incoming to published ports (all nodes listen).
+
+node1 ip:port (svc:port) -----> swarm LB----> container on Node1
+
+node2 ip:port (svc:port) -----> swarm LB----> container on Node2
+
+node3 ip:port (svc:port) -----> swarm LB----> container on Node3
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+$ docker service create --name search -p 9200:9200 --replicas=3 elasticsearch:2
+hvq6syunmze93p8oaiq165f8m
+overall progress: 3 out of 3 tasks 
+1/3: running   [==================================================>] 
+2/3: running   [==================================================>] 
+3/3: running   [==================================================>] 
+verify: Service converged 
+
+
+[manager1] (local) root@192.168.0.27 ~
+$ docker service ps search
+ID             NAME       IMAGE             NODE       DESIRED STATE   CURRENT STATE            ERROR     PORTS
+j89klseg0mhi   search.1   elasticsearch:2   worker1    Running         Running 15 seconds ago             
+lw85c89vomta   search.2   elasticsearch:2   worker1    Running         Running 15 seconds ago             
+l0zmdrjx10lw   search.3   elasticsearch:2   manager1   Running         Running 15 seconds ago  
+
+$ curl http://localhost:9200  --> enter num of time and see name changes as it VIP distribute traffic to different tasks.
+
+
+
+
