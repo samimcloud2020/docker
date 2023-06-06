@@ -1,0 +1,114 @@
+The overlay network driver creates a distributed network among multiple Docker daemon hosts.
+
+This network sits on top of (overlays) the host-specific networks, allowing containers connected to it (including swarm service containers)
+to communicate securely when encryption is enabled. 
+
+Docker transparently handles routing of each packet to and from the correct Docker daemon host and the correct destination container.
+-----------------------------------------------------------------------------------------------------------------------------
+When you initialize a swarm or join a Docker host to an existing swarm, two new networks are created on that Docker host:
+
+an overlay network called ingress, which handles the control and data traffic related to swarm services.
+When you create a swarm service and do not connect it to a user-defined overlay network, it connects to the ingress network by default.
+
+a bridge network called docker_gwbridge, which connects the individual Docker daemon to the other daemons participating in the swarm.
+------------------------------------------------------------------------------------------------------------------------------------
+You can create user-defined overlay networks using docker network create, in the same way that you can create user-defined bridge networks.
+
+Services or containers can be connected to more than one network at a time.
+
+Services or containers can only communicate across networks they are each connected to.
+
+Although you can connect both swarm services and standalone containers to an overlay network, 
+the default behaviors and configuration concerns are different.
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+Create an overlay network
+Prerequisites:
+
+Firewall rules for Docker daemons using overlay networks:-----------------
+
+You need the following ports open to traffic to and from each Docker host participating on an overlay network:
+
+TCP port 2377 for cluster management communications
+TCP and UDP port 7946 for communication among nodes
+UDP port 4789 for overlay network traffic
+
+Before you can create an overlay network, you need to either initialize your Docker daemon as a swarm manager 
+using docker swarm init or join it to an existing swarm using docker swarm join. 
+
+Either of these creates the default ingress overlay network which is used by swarm services by default.
+
+You need to do this even if you never plan to use swarm services.
+
+Afterward, you can create additional user-defined overlay networks.
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+$ docker network ls
+NETWORK ID     NAME              DRIVER    SCOPE
+67d4bfd8896f   bridge            bridge    local
+b2c942df7283   docker_gwbridge   bridge    local    <------------------------------------
+6729909f787f   host              host      local
+9g5vor4boopu   ingress           overlay   swarm    <--------------------------------------
+8845a82df5d5   none              null      local
+
+$ docker network create --driver overlay mydrupal
+ru2vgf7bofjvs2p011xaaslkx
+
+
+$ docker network ls
+NETWORK ID     NAME              DRIVER    SCOPE
+67d4bfd8896f   bridge            bridge    local
+b2c942df7283   docker_gwbridge   bridge    local
+6729909f787f   host              host      local
+9g5vor4boopu   ingress           overlay   swarm
+ru2vgf7bofjv   mydrupal          overlay   swarm
+8845a82df5d5   none              null      local
+
+
+$ docker service create  --name psql --network mydrupal  -e POSTGRES_PASSWORD=password postgres
+5fcb3u28ac8f525rxsbyurt5c
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
+
+$ docker service create --name drupal --network mydrupal -p 80:80 drupal
+fy1jbrpnvgfu5lxidl0o8y2fs
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
+[manager1] (local) root@192.168.0.14 ~
+$ docker service ls
+ID             NAME      MODE         REPLICAS   IMAGE             PORTS
+fy1jbrpnvgfu   drupal    replicated   1/1        drupal:latest     *:80->80/tcp
+5fcb3u28ac8f   psql      replicated   1/1        postgres:latest   
+
+$ docker service ls
+ID             NAME      MODE         REPLICAS   IMAGE             PORTS
+fy1jbrpnvgfu   drupal    replicated   1/1        drupal:latest     *:80->80/tcp
+5fcb3u28ac8f   psql      replicated   1/1        postgres:latest   
+
+[manager1] (local) root@192.168.0.14 ~
+$ docker service ps drupal  ------------> svc drupal on manager3
+ID             NAME       IMAGE           NODE       DESIRED STATE   CURRENT STATE           ERROR     PORTS
+h5hfa2v3e9ym   drupal.1   drupal:latest   manager3   Running         Running 2 minutes ago   
+
+[manager1] (local) root@192.168.0.14 ~
+$ docker service ps psql  --------------------------> svc psql on worker1
+ID             NAME      IMAGE             NODE      DESIRED STATE   CURRENT STATE           ERROR     PORTS
+jje4z87pqxaj   psql.1    postgres:latest   worker1   Running         Running 4 minutes ago      
+
+
+so how svc psql and drupal connected via overlay network?
+
+http://localhost:80  ----> open drupal  and in drupal set host as svc name (psql) so drupal connect to psql.
+
+
+db type: postgresql
+db name: postgres
+u: postgres
+p: password
+host to con: psql  ----> svc name
+port: 5432
+
+
+http:// any node(worker/manager):80  ---> work due to routing mesh
