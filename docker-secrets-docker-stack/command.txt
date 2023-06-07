@@ -1,0 +1,11 @@
+when secret as external you have to create 1st.
+
+$ docker secret create psql-pass psql_pass.txt
+
+$ docker secret inspect psql-pass
+--------------------------------------------
+$ dpcker stack deploy -c docker-compose.yml stack1
+
+$ docker service ls
+
+$ docker stack ps stack1
