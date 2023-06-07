@@ -9,21 +9,23 @@ $ docker network create --driver overlay backend
 
 $ docker network create --driver overlay frontend
 
-$ docker stack deploy -c docker-compose.yml stack1
-Creating service stack1_vote
-Creating service stack1_result
-Creating service stack1_worker
-Creating service stack1_redis
-Creating service stack1_db
+$ docker stack ps stack1
+ID             NAME              IMAGE                                       NODE       DESIRED STATE   CURRENT STATE            ERROR     PORTS
+syxsog34jd9z   stack1_db.1       postgres:9.4                                manager3   Running         Running 54 seconds ago             
+st6yp4ggctsh   stack1_redis.1    redis:alpine                                worker1    Running         Running 52 seconds ago             
+juaditusyij5   stack1_result.1   bretfisher/examplevotingapp_result:latest   worker2    Running         Running 53 seconds ago             
+p2nv6xm738h5   stack1_vote.1     bretfisher/examplevotingapp_vote:latest     manager1   Running         Running 44 seconds ago             
+k0t9drvyz5ey   stack1_worker.1   bretfisher/examplevotingapp_worker:latest   manager2   Running         Running 45 seconds ago             
 
-
-$ docker stack services stack1
+$ docker stack services  stack1
 ID             NAME            MODE         REPLICAS   IMAGE                                       PORTS
-l3jl9qc0icx6   stack1_db       replicated   0/1        postgres:9.4                                
-khsw1og5am2s   stack1_redis    replicated   1/1        redis:alpine                                *:30000->6379/tcp
-whxbgb0evb73   stack1_result   replicated   1/1        bretfisher/examplevotingapp_result:latest   *:5001->80/tcp
-r5579dd871np   stack1_vote     replicated   1/1        bretfisher/examplevotingapp_vote:latest     *:5000->80/tcp
-39ypyaszd9bs   stack1_worker   replicated   0/1        bretfisher/examplevotingapp_worker:latest   
+a7pr526zjtbb   stack1_db       replicated   1/1        postgres:9.4                                
+sm54ofg3aqfo   stack1_redis    replicated   1/1        redis:alpine                                *:30001->6379/tcp
+l6djlvjd6he2   stack1_result   replicated   1/1        bretfisher/examplevotingapp_result:latest   *:5001->80/tcp
+orzpxpj8tyi5   stack1_vote     replicated   1/1        bretfisher/examplevotingapp_vote:latest     *:5000->80/tcp
+qcqwuwfznnki   stack1_worker   replicated   1/1        bretfisher/examplevotingapp_worker:latest   
+
+
 
 
 
