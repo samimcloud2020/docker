@@ -17,3 +17,13 @@ Creating service stack1_redis
 Creating service stack1_db
 
 
+$ docker stack services stack1
+ID             NAME            MODE         REPLICAS   IMAGE                                       PORTS
+l3jl9qc0icx6   stack1_db       replicated   0/1        postgres:9.4                                
+khsw1og5am2s   stack1_redis    replicated   1/1        redis:alpine                                *:30000->6379/tcp
+whxbgb0evb73   stack1_result   replicated   1/1        bretfisher/examplevotingapp_result:latest   *:5001->80/tcp
+r5579dd871np   stack1_vote     replicated   1/1        bretfisher/examplevotingapp_vote:latest     *:5000->80/tcp
+39ypyaszd9bs   stack1_worker   replicated   0/1        bretfisher/examplevotingapp_worker:latest   
+
+
+
