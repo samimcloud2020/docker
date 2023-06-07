@@ -1,0 +1,6 @@
+$ docker stack deploy -c docker-compose.yml stack1
+
+$docker service ls
+
+$docker stack rm stack1
+
