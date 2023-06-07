@@ -3,9 +3,9 @@ services:
   redis:
     image: redis:alpine
     ports:
-      - 6379
+      - "6379"
     networks:
-      - frontend
+      - "frontend"
     deploy:
       replicas: 2
       update_config:
@@ -16,20 +16,20 @@ services:
   db:
     image: postgres:9.4
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - "db-data:/var/lib/postgresql/data"
     networks:
-      - backend
+      - "backend"
     deploy:
       placement:
         constraints: [node.role == manager]
   vote:
     image: bretfisher/examplevotingapp_vote
     ports:
-      - 5000:80
+      - "5000:80"
     networks:
-      - frontend
+      - "frontend"
     depends_on:
-      - redis
+      - "redis"
     deploy:
       replicas: 2
       update_config:
@@ -39,11 +39,11 @@ services:
   result:
     image: bretfisher/examplevotingapp_result
     ports:
-      - 5001:80
+      - "5001:80"
     networks:
-      - backend
+      - "backend"
     depends_on:
-      - db
+      - "db"
     deploy:
       replicas: 1
       update_config:
@@ -54,8 +54,8 @@ services:
   worker:
     image: bretfisher/examplevotingapp_worker
     networks:
-      - frontend
-      - backend
+      - "frontend"
+      - "backend"
     deploy:
       mode: replicated
       replicas: 1
@@ -67,5 +67,14 @@ services:
         window: 120s
       placement:
         constraints: [ node.role == manager]
+        
+networks:
+    backend:
+        driver: overlay
+    frontend:
+        driver: overlay
+volumes:
+    db-data:
+        driver: local
 
 
