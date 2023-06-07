@@ -24,7 +24,114 @@ sm54ofg3aqfo   stack1_redis    replicated   1/1        redis:alpine             
 l6djlvjd6he2   stack1_result   replicated   1/1        bretfisher/examplevotingapp_result:latest   *:5001->80/tcp
 orzpxpj8tyi5   stack1_vote     replicated   1/1        bretfisher/examplevotingapp_vote:latest     *:5000->80/tcp
 qcqwuwfznnki   stack1_worker   replicated   1/1        bretfisher/examplevotingapp_worker:latest   
-
+----------------------------------------------------------------------------------------------------------------------------------------
+$ docker stack config -c docker-compose.yml
+version: "3.11"
+services:
+  db:
+    deploy:
+      placement:
+        constraints:
+        - node.role == manager
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_PASSWORD: mypass
+    image: postgres:9.4
+    networks:
+      backend: null
+    volumes:
+    - type: volume
+      source: db-data
+      target: /var/lib/postgresql/data
+      
+      
+  redis:
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    image: redis:alpine
+    networks:
+      frontend: null
+    ports:
+    - mode: ingress
+      target: 6379
+      protocol: tcp
+      
+      
+  result:
+    depends_on:
+    - db
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    image: bretfisher/examplevotingapp_result
+    networks:
+      backend: null
+    ports:
+    - mode: ingress
+      target: 80
+      published: 5001
+      protocol: tcp
+      
+      
+  vote:
+    depends_on:
+    - redis
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+      restart_policy:
+        condition: on-failure
+    image: bretfisher/examplevotingapp_vote
+    networks:
+      frontend: null
+    ports:
+    - mode: ingress
+      target: 80
+      published: 5000
+      protocol: tcp
+      
+      
+  worker:
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        APP: VOTING
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 2m0s
+      placement:
+        constraints:
+        - node.role == manager
+    image: bretfisher/examplevotingapp_worker
+    networks:
+      backend: null
+      frontend: null
+      
+      
+networks:
+  backend:
+    driver: overlay
+  frontend:
+    driver: overlay
+volumes:
+  db-data:
+    driver: local
+    ---------------------------------------------------------------------------------------------------------------------
+    
 
 
 
