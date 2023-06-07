@@ -1,3 +1,22 @@
+Docker 1.13 add stack in swarm.
+
+stack accept compose file as declarative definition for network, volume and services.
+
+docker stack deploy ---rather then-------docker service creat
+
+docker stack deploy----can not do build:
+
+docker-compose ignores "deploy"--------swarm ignores "build:"
+
+stack----> services, overlay n/w, volumes
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------
 Start the registry as a service on your swarm:
 $ docker run -d -p 5000:5000 --restart=always --name registry registry:2
 
