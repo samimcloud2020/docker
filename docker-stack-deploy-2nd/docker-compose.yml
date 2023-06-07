@@ -7,7 +7,7 @@ services:
     networks:
       - "frontend"
     deploy:
-      replicas: 2
+      replicas: 1
       update_config:
         parallelism: 2
         delay: 10s
@@ -15,6 +15,9 @@ services:
         condition: on-failure
   db:
     image: postgres:9.4
+    environment:
+        POSTGRES_PASSWORD: mypass
+        POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - "db-data:/var/lib/postgresql/data"
     networks:
@@ -31,7 +34,7 @@ services:
     depends_on:
       - "redis"
     deploy:
-      replicas: 2
+      replicas: 1
       update_config:
         parallelism: 2
       restart_policy:
@@ -76,5 +79,4 @@ networks:
 volumes:
     db-data:
         driver: local
-
 
