@@ -16,7 +16,7 @@ services:
   db:
     image: postgres:9.4
     environment:
-        POSTGRES_PASSWORD: /run/secrets/psql_pass
+        POSTGRES_PASSWORD_FILE: /run/secrets/psql_pass
         POSTGRES_HOST_AUTH_METHOD: trust
         PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
