@@ -24,7 +24,7 @@ docker service create --name db --network backend -e POSTGRES_HOST_AUTH_METHOD=t
 
 docker service create --name result -p 5000:80 --network backend bretfisher/examplevotingapp_result
 
-
+vote(frontend n/w, exposed 80, python)---->redis(frontend n/w, key-value memory store)-->worker(frontend,.net)-->db(backend & frontend, postgres)-->result(backend,nodejs, exposed 5000)
 
 docker network create --driver overlay frontend && docker network create --driver overlay backend
 
