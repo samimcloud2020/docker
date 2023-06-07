@@ -1,0 +1,3 @@
+$ docker stack deploy --compose-file docker-compose.yml stack1
+
+$ docker stack services <srv name>
