@@ -1,3 +1,19 @@
 $ docker stack deploy --compose-file docker-compose.yml stack1
 
 $ docker stack services <srv name>
+
+
+$ docker volume create db-data 
+
+$ docker network create --driver overlay backend
+
+$ docker network create --driver overlay frontend
+
+$ docker stack deploy -c docker-compose.yml stack1
+Creating service stack1_vote
+Creating service stack1_result
+Creating service stack1_worker
+Creating service stack1_redis
+Creating service stack1_db
+
+
