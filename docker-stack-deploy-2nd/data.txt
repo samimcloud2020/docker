@@ -132,7 +132,312 @@ volumes:
     driver: local
     ---------------------------------------------------------------------------------------------------------------------
     
+auto created by docker------------------
+
+$ docker volume ls
+DRIVER    VOLUME NAME
+local     stack1_db-data
+
+[manager1] (local) root@192.168.0.7 ~
+$ docker network ls
+NETWORK ID     NAME              DRIVER    SCOPE
+e534388b64bf   bridge            bridge    local
+e87d632c7546   docker_gwbridge   bridge    local
+3fb3a2b7bf77   host              host      local
+imxxal4vhnyy   ingress           overlay   swarm
+cdd6dbbcfc0a   none              null      local
+j3ifut39x6fq   stack1_backend    overlay   swarm
+gdw4kak10eki   stack1_frontend   overlay   swarm
+
+-------------------------let change replicas:2 and update it--------------------------------------------------------------------------------------
+$ cat docker-compose.yml
+version: "3"
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379"
+    networks:
+      - "frontend"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+  db:
+    image: postgres:9.4
+    environment:
+        POSTGRES_PASSWORD: mypass
+        POSTGRES_HOST_AUTH_METHOD: trust
+        PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - "db-data:/var/lib/postgresql/data"
+    networks:
+      - "backend"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+  vote:
+    image: bretfisher/examplevotingapp_vote
+    ports:
+      - "5000:80"
+    networks:
+      - "frontend"
+    depends_on:
+      - "redis"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 2
+      restart_policy:
+        condition: on-failure
+  result:
+    image: bretfisher/examplevotingapp_result
+    ports:
+      - "5001:80"
+    networks:
+      - "backend"
+    depends_on:
+      - "db"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+  worker:
+    image: bretfisher/examplevotingapp_worker
+    networks:
+      - "frontend"
+      - "backend"
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels: [APP=VOTING]
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints: [ node.role == manager]
+        
+networks:
+    backend:
+        driver: overlay
+    frontend:
+        driver: overlay
+volumes:
+    db-data:
+        driver: local
+  -------------------      
+        $ docker stack deploy -c docker-compose.yml stack1
+Updating service stack1_vote (id: ma6awch4vhfh5b68mxclm2apl)
+Updating service stack1_result (id: qfgy3r59n1h4bxv7srs8i92xo)
+Updating service stack1_worker (id: 1wqcw11dbdh65568cjpf2e2m4)
+Updating service stack1_redis (id: k2ko7ls8ateci17031yyg3lco)
+Updating service stack1_db (id: 9y6wbrybw1rqgillg1bk4k7zi)
+
+[manager1] (local) root@192.168.0.7 ~
+$ docker stack ps stack1
+ID             NAME              IMAGE                                       NODE       DESIRED STATE   CURRENT STATE              ERROR     PORTS
+wdph2wbnnkn1   stack1_db.1       postgres:9.4                                manager1   Running         Running 7 minutes ago                
+rhpn8fkl28xv   stack1_redis.1    redis:alpine                                worker1    Running         Running 7 minutes ago                
+3hlyibdb50h9   stack1_redis.2    redis:alpine                                manager1   Running         Running 4 seconds ago                
+y8wqw7d5ccwd   stack1_result.1   bretfisher/examplevotingapp_result:latest   worker1    Running         Running 7 minutes ago                
+svy6dl5n8zax   stack1_result.2   bretfisher/examplevotingapp_result:latest   manager1   Running         Preparing 9 seconds ago              
+0g9m3txlmpox   stack1_vote.1     bretfisher/examplevotingapp_vote:latest     worker1    Running         Running 7 minutes ago                
+8z6wleboik1l   stack1_vote.2     bretfisher/examplevotingapp_vote:latest     manager1   Running         Preparing 10 seconds ago             
+16efg894l23g   stack1_worker.1   bretfisher/examplevotingapp_worker:latest   manager1   Running         Running 7 minutes ago  
 
 
 
+---------------------------------docker ps--------------------------------------------------------
+$ docker ps
+CONTAINER ID   IMAGE                                       COMMAND                  CREATED              STATUS              PORTS      NAMES
+07be5391b813   bretfisher/examplevotingapp_result:latest   "docker-entrypoint.s…"   About a minute ago   Up About a minute   80/tcp     stack1_result.2.svy6dl5n8zax5ek8b2b0inas9
+881707a39a5d   bretfisher/examplevotingapp_vote:latest     "gunicorn app:app -b…"   About a minute ago   Up About a minute   80/tcp     stack1_vote.2.8z6wleboik1l6prq84ii8coed
+675f2f8e5096   redis:alpine                                "docker-entrypoint.s…"   About a minute ago   Up About a minute   6379/tcp   stack1_redis.2.3hlyibdb50h9v3jjfm5rbxnev
+b40d3c1735c0   postgres:9.4                                "docker-entrypoint.s…"   8 minutes ago        Up 8 minutes        5432/tcp   stack1_db.1.wdph2wbnnkn1f5hnhi83v23zt
+e947e6d0d4d1   bretfisher/examplevotingapp_worker:latest   "dotnet Worker.dll"      8 minutes ago        Up 8 minutes                   stack1_worker.1.16efg894l23glfc452whd7s0k
 
+
+
+--------------------------------service logs---------------------------------------------------------------------
+$ docker service ls
+ID             NAME            MODE         REPLICAS   IMAGE                                       PORTS
+9y6wbrybw1rq   stack1_db       replicated   1/1        postgres:9.4                                
+k2ko7ls8atec   stack1_redis    replicated   2/2        redis:alpine                                *:30000->6379/tcp
+qfgy3r59n1h4   stack1_result   replicated   2/2        bretfisher/examplevotingapp_result:latest   *:5001->80/tcp
+ma6awch4vhfh   stack1_vote     replicated   2/2        bretfisher/examplevotingapp_vote:latest     *:5000->80/tcp
+1wqcw11dbdh6   stack1_worker   replicated   1/1        bretfisher/examplevotingapp_worker:latest   
+
+
+[manager1] (local) root@192.168.0.7 ~
+$ docker service logs stack1_db
+stack1_db.1.wdph2wbnnkn1@manager1    | ********************************************************************************
+stack1_db.1.wdph2wbnnkn1@manager1    | WARNING: POSTGRES_HOST_AUTH_METHOD has been set to "trust". This will allow
+stack1_db.1.wdph2wbnnkn1@manager1    |          anyone with access to the Postgres port to access your database without
+stack1_db.1.wdph2wbnnkn1@manager1    |          a password, even if POSTGRES_PASSWORD is set. See PostgreSQL
+stack1_db.1.wdph2wbnnkn1@manager1    |          documentation about "trust":
+stack1_db.1.wdph2wbnnkn1@manager1    |          https://www.postgresql.org/docs/current/auth-trust.html
+stack1_db.1.wdph2wbnnkn1@manager1    |          In Docker's default configuration, this is effectively any other
+stack1_db.1.wdph2wbnnkn1@manager1    |          container on the same system.
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    |          It is not recommended to use POSTGRES_HOST_AUTH_METHOD=trust. Replace
+stack1_db.1.wdph2wbnnkn1@manager1    |          it with "-e POSTGRES_PASSWORD=password" instead to set a password in
+stack1_db.1.wdph2wbnnkn1@manager1    |          "docker run".
+stack1_db.1.wdph2wbnnkn1@manager1    | ********************************************************************************
+stack1_db.1.wdph2wbnnkn1@manager1    | The files belonging to this database system will be owned by user "postgres".
+stack1_db.1.wdph2wbnnkn1@manager1    | This user must also own the server process.
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    | The database cluster will be initialized with locale "en_US.utf8".
+stack1_db.1.wdph2wbnnkn1@manager1    | The default database encoding has accordingly been set to "UTF8".
+stack1_db.1.wdph2wbnnkn1@manager1    | The default text search configuration will be set to "english".
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    | Data page checksums are disabled.
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    | fixing permissions on existing directory /var/lib/postgresql/data/pgdata ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | creating subdirectories ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | selecting default max_connections ... 100
+stack1_db.1.wdph2wbnnkn1@manager1    | selecting default shared_buffers ... 128MB
+stack1_db.1.wdph2wbnnkn1@manager1    | selecting default timezone ... Etc/UTC
+stack1_db.1.wdph2wbnnkn1@manager1    | selecting dynamic shared memory implementation ... posix
+stack1_db.1.wdph2wbnnkn1@manager1    | creating configuration files ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | creating template1 database in /var/lib/postgresql/data/pgdata/base/1 ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | initializing pg_authid ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | setting password ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | initializing dependencies ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | creating system views ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | loading system objects' descriptions ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | creating collations ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | creating conversions ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | creating dictionaries ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | setting privileges on built-in objects ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | creating information schema ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | loading PL/pgSQL server-side language ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | vacuuming database template1 ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | copying template1 to template0 ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | copying template1 to postgres ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    | WARNING: enabling "trust" authentication for local connections
+stack1_db.1.wdph2wbnnkn1@manager1    | You can change this by editing pg_hba.conf or using the option -A, or
+stack1_db.1.wdph2wbnnkn1@manager1    | --auth-local and --auth-host, the next time you run initdb.
+stack1_db.1.wdph2wbnnkn1@manager1    | syncing data to disk ... ok
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    | Success. You can now start the database server using:
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    |     postgres -D /var/lib/postgresql/data/pgdata
+stack1_db.1.wdph2wbnnkn1@manager1    | or
+stack1_db.1.wdph2wbnnkn1@manager1    |     pg_ctl -D /var/lib/postgresql/data/pgdata -l logfile start
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    | waiting for server to start....LOG:  database system was shut down at 2023-06-07 08:33:54 UTC
+stack1_db.1.wdph2wbnnkn1@manager1    | LOG:  MultiXact member wraparound protections are now enabled
+stack1_db.1.wdph2wbnnkn1@manager1    | LOG:  autovacuum launcher started
+stack1_db.1.wdph2wbnnkn1@manager1    | LOG:  database system is ready to accept connections
+stack1_db.1.wdph2wbnnkn1@manager1    |  done
+stack1_db.1.wdph2wbnnkn1@manager1    | server started
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    | LOG:  received fast shutdown request
+stack1_db.1.wdph2wbnnkn1@manager1    | waiting for server to shut down...LOG:  aborting any active transactions
+stack1_db.1.wdph2wbnnkn1@manager1    | LOG:  autovacuum launcher shutting down
+stack1_db.1.wdph2wbnnkn1@manager1    | .LOG:  shutting down
+stack1_db.1.wdph2wbnnkn1@manager1    | LOG:  database system is shut down
+stack1_db.1.wdph2wbnnkn1@manager1    |  done
+stack1_db.1.wdph2wbnnkn1@manager1    | server stopped
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    | PostgreSQL init process complete; ready for start up.
+stack1_db.1.wdph2wbnnkn1@manager1    | 
+stack1_db.1.wdph2wbnnkn1@manager1    | LOG:  database system was shut down at 2023-06-07 08:33:55 UTC
+stack1_db.1.wdph2wbnnkn1@manager1    | LOG:  MultiXact member wraparound protections are now enabled
+stack1_db.1.wdph2wbnnkn1@manager1    | LOG:  autovacuum launcher started
+stack1_db.1.wdph2wbnnkn1@manager1    | LOG:  database system is ready to accept connections
+stack1_db.1.wdph2wbnnkn1@manager1    | ERROR:  duplicate key value violates unique constraint "votes_id_key"
+stack1_db.1.wdph2wbnnkn1@manager1    | DETAIL:  Key (id)=(83dd3e804e27309) already exists.
+stack1_db.1.wdph2wbnnkn1@manager1    | STATEMENT:  INSERT INTO votes (id, vote) VALUES ($1, $2)
+
+$ docker service logs stack1_vote
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:33:47 +0000] [1] [INFO] Starting gunicorn 20.1.0
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:33:47 +0000] [1] [INFO] Listening at: http://0.0.0.0:80 (1)
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:33:47 +0000] [1] [INFO] Using worker: sync
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:33:47 +0000] [8] [INFO] Booting worker with pid: 8
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:33:47 +0000] [9] [INFO] Booting worker with pid: 9
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:33:47 +0000] [10] [INFO] Booting worker with pid: 10
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:33:47 +0000] [11] [INFO] Booting worker with pid: 11
+stack1_vote.1.0g9m3txlmpox@worker1    | 10.0.0.2 - - [07/Jun/2023:08:34:09 +0000] "GET / HTTP/1.1" 200 1285 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+stack1_vote.1.0g9m3txlmpox@worker1    | 10.0.0.2 - - [07/Jun/2023:08:34:10 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 200 0 "http://ip172-18-0-39-ci040d0gftqg00entvn0-5000.direct.labs.play-with-docker.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+stack1_vote.1.0g9m3txlmpox@worker1    | 10.0.0.2 - - [07/Jun/2023:08:34:10 +0000] "GET /favicon.ico HTTP/1.1" 404 207 "http://ip172-18-0-39-ci040d0gftqg00entvn0-5000.direct.labs.play-with-docker.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:34:18,314] INFO in app: Received vote for a
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:34:18 +0000] [8] [INFO] Received vote for a
+stack1_vote.1.0g9m3txlmpox@worker1    | 10.0.0.2 - - [07/Jun/2023:08:34:18 +0000] "POST / HTTP/1.1" 200 1688 "http://ip172-18-0-39-ci040d0gftqg00entvn0-5000.direct.labs.play-with-docker.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+stack1_vote.1.0g9m3txlmpox@worker1    | 10.0.0.2 - - [07/Jun/2023:08:34:18 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 304 0 "http://ip172-18-0-39-ci040d0gftqg00entvn0-5000.direct.labs.play-with-docker.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:34:23,034] INFO in app: Received vote for b
+stack1_vote.2.8z6wleboik1l@manager1    | [2023-06-07 08:41:01 +0000] [1] [INFO] Starting gunicorn 20.1.0
+stack1_vote.1.0g9m3txlmpox@worker1    | [2023-06-07 08:34:23 +0000] [8] [INFO] Received vote for b
+stack1_vote.1.0g9m3txlmpox@worker1    | 10.0.0.2 - - [07/Jun/2023:08:34:23 +0000] "POST / HTTP/1.1" 200 1688 "http://ip172-18-0-39-ci040d0gftqg00entvn0-5000.direct.labs.play-with-docker.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+stack1_vote.1.0g9m3txlmpox@worker1    | 10.0.0.2 - - [07/Jun/2023:08:34:23 +0000] "GET /static/stylesheets/style.css HTTP/1.1" 304 0 "http://ip172-18-0-39-ci040d0gftqg00entvn0-5000.direct.labs.play-with-docker.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+stack1_vote.2.8z6wleboik1l@manager1    | [2023-06-07 08:41:01 +0000] [1] [INFO] Listening at: http://0.0.0.0:80 (1)
+stack1_vote.2.8z6wleboik1l@manager1    | [2023-06-07 08:41:01 +0000] [1] [INFO] Using worker: sync
+stack1_vote.2.8z6wleboik1l@manager1    | [2023-06-07 08:41:01 +0000] [7] [INFO] Booting worker with pid: 7
+stack1_vote.2.8z6wleboik1l@manager1    | [2023-06-07 08:41:01 +0000] [8] [INFO] Booting worker with pid: 8
+stack1_vote.2.8z6wleboik1l@manager1    | [2023-06-07 08:41:01 +0000] [9] [INFO] Booting worker with pid: 9
+stack1_vote.2.8z6wleboik1l@manager1    | [2023-06-07 08:41:01 +0000] [10] [INFO] Booting worker with pid: 10
+
+--------------------------------------------------------------------------------------------------------------------------
+$ docker service logs stack1_redis
+stack1_redis.2.3hlyibdb50h9@manager1    | 1:C 07 Jun 2023 08:40:52.459 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+stack1_redis.2.3hlyibdb50h9@manager1    | 1:C 07 Jun 2023 08:40:52.459 # Redis version=7.0.11, bits=64, commit=00000000, modified=0, pid=1, just started
+stack1_redis.2.3hlyibdb50h9@manager1    | 1:C 07 Jun 2023 08:40:52.459 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+stack1_redis.2.3hlyibdb50h9@manager1    | 1:M 07 Jun 2023 08:40:52.460 * monotonic clock: POSIX clock_gettime
+stack1_redis.2.3hlyibdb50h9@manager1    | 1:M 07 Jun 2023 08:40:52.464 * Running mode=standalone, port=6379.
+stack1_redis.2.3hlyibdb50h9@manager1    | 1:M 07 Jun 2023 08:40:52.464 # WARNING: The TCP backlog setting of 511 cannot be enforced because /proc/sys/net/core/somaxconn is set to the lower value of 128.
+stack1_redis.1.rhpn8fkl28xv@worker1    | 1:C 07 Jun 2023 08:33:36.551 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+stack1_redis.1.rhpn8fkl28xv@worker1    | 1:C 07 Jun 2023 08:33:36.551 # Redis version=7.0.11, bits=64, commit=00000000, modified=0, pid=1, just started
+stack1_redis.1.rhpn8fkl28xv@worker1    | 1:C 07 Jun 2023 08:33:36.551 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+stack1_redis.1.rhpn8fkl28xv@worker1    | 1:M 07 Jun 2023 08:33:36.555 * monotonic clock: POSIX clock_gettime
+stack1_redis.1.rhpn8fkl28xv@worker1    | 1:M 07 Jun 2023 08:33:36.557 * Running mode=standalone, port=6379.
+stack1_redis.1.rhpn8fkl28xv@worker1    | 1:M 07 Jun 2023 08:33:36.557 # WARNING: The TCP backlog setting of 511 cannot be enforced because /proc/sys/net/core/somaxconn is set to the lower value of 128.
+stack1_redis.1.rhpn8fkl28xv@worker1    | 1:M 07 Jun 2023 08:33:36.557 # Server initialized
+stack1_redis.1.rhpn8fkl28xv@worker1    | 1:M 07 Jun 2023 08:33:36.558 * Ready to accept connections
+stack1_redis.2.3hlyibdb50h9@manager1    | 1:M 07 Jun 2023 08:40:52.464 # Server initialized
+stack1_redis.2.3hlyibdb50h9@manager1    | 1:M 07 Jun 2023 08:40:52.465 * Ready to accept connections
+
+
+$ docker service logs stack1_worker
+stack1_worker.1.16efg894l23g@manager1    | Waiting for db
+stack1_worker.1.16efg894l23g@manager1    | Waiting for db
+stack1_worker.1.16efg894l23g@manager1    | Waiting for db
+stack1_worker.1.16efg894l23g@manager1    | Waiting for db
+stack1_worker.1.16efg894l23g@manager1    | Waiting for db
+stack1_worker.1.16efg894l23g@manager1    | Waiting for db
+stack1_worker.1.16efg894l23g@manager1    | Waiting for db
+stack1_worker.1.16efg894l23g@manager1    | Waiting for db
+stack1_worker.1.16efg894l23g@manager1    | Waiting for db
+stack1_worker.1.16efg894l23g@manager1    | Connected to db
+stack1_worker.1.16efg894l23g@manager1    | Found redis at 10.0.1.5
+stack1_worker.1.16efg894l23g@manager1    | Connecting to redis
+stack1_worker.1.16efg894l23g@manager1    | Processing vote for 'a' by '83dd3e804e27309'
+stack1_worker.1.16efg894l23g@manager1    | Processing vote for 'b' by '83dd3e804e27309'
+
+
+[manager1] (local) root@192.168.0.7 ~
+$ docker service logs stack1_result
+stack1_result.1.y8wqw7d5ccwd@worker1    | Wed, 07 Jun 2023 08:33:51 GMT body-parser deprecated bodyParser: use individual json/urlencoded middlewares at server.js:73:9
+stack1_result.1.y8wqw7d5ccwd@worker1    | Wed, 07 Jun 2023 08:33:51 GMT body-parser deprecated undefined extended: provide extended option at ../node_modules/body-parser/index.js:104:29
+stack1_result.1.y8wqw7d5ccwd@worker1    | App running on port 80
+stack1_result.1.y8wqw7d5ccwd@worker1    | Waiting for db
+stack1_result.1.y8wqw7d5ccwd@worker1    | Waiting for db
+stack1_result.1.y8wqw7d5ccwd@worker1    | Waiting for db
+stack1_result.1.y8wqw7d5ccwd@worker1    | Waiting for db
+stack1_result.1.y8wqw7d5ccwd@worker1    | Waiting for db
+stack1_result.1.y8wqw7d5ccwd@worker1    | Waiting for db
+stack1_result.1.y8wqw7d5ccwd@worker1    | Connected to db
+stack1_result.2.svy6dl5n8zax@manager1    | Wed, 07 Jun 2023 08:41:04 GMT body-parser deprecated bodyParser: use individual json/urlencoded middlewares at server.js:73:9
+stack1_result.2.svy6dl5n8zax@manager1    | Wed, 07 Jun 2023 08:41:04 GMT body-parser deprecated undefined extended: provide extended option at ../node_modules/body-parser/index.js:104:29
+stack1_result.2.svy6dl5n8zax@manager1    | App running on port 80
+stack1_result.2.svy6dl5n8zax@manager1    | Connected to db
