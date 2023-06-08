@@ -50,11 +50,10 @@ services:
       - "backend"  
   db:
     image: postgres:9.4
-    
     environment:
-        POSTGRES_DB_PASSWORD_FILE: /run/secrets/psql_pass
-        POSTGRES_HOST_AUTH_METHOD: trust
-        PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB_PASSWORD_FILE: /run/secrets/psql_pass
+      POSTGRES_HOST_AUTH_METHOD: trust                     #without password works
+      PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - "db-data:/var/lib/postgresql/data"
       - "vol1:/run/secrets/psql_pass" 
