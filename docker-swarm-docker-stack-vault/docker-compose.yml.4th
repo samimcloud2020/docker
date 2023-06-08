@@ -1,0 +1,127 @@
+version: "3"
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379"
+    networks:
+      - "frontend"
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+  secrets:
+    image: vault:latest
+    container_name: vault
+    ports:
+      - 8200:8200
+    environment:
+      - VAULT_ADDR=http://127.0.0.1:8200
+      - VAULT_API_ADDR=http://127.0.0.1:8200
+    command:
+      - /bin/sh
+      - -c
+      - |
+        vault server -dev -dev-root-token-id=myroot
+        VAULT_RETRIES=5
+        echo "Vault is starting..."
+        until vault status > /dev/null 2>&1 || [ "$VAULT_RETRIES" -eq 0 ]; do
+        echo "Waiting for vault to start...: $((VAULT_RETRIES--))"
+        sleep 1
+        done
+        echo "Authenticating to vault..."
+        export VAULT_ADDR=http://0.0.0.0:8200
+        vault status
+        vault login token=myroot
+        echo "Initializing vault..."
+        vault secrets enable -version=2 -path=secrets kv
+        echo "Adding entries..."
+        vault kv put secrets/dev psql_pass=mypass
+        echo "Complete..."
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - "./secrets:/secrets/dat/dev" 
+    networks:
+      - "backend"  
+  db:
+    image: postgres:9.4
+    
+    environment:
+        POSTGRES_PASSWORD_FILE: /run/secrets/psql_pass
+        POSTGRES_HOST_AUTH_METHOD: trust
+        PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - "db-data:/var/lib/postgresql/data"
+      - "secrets:/run/secrets" 
+    networks:
+      - "backend"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  
+
+  vote:
+    image: bretfisher/examplevotingapp_vote
+    ports:
+      - "5000:80"
+    networks:
+      - "frontend"
+    depends_on:
+      - "redis"
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+      restart_policy:
+        condition: on-failure
+  result:
+    image: bretfisher/examplevotingapp_result
+    ports:
+      - "5001:80"
+    networks:
+      - "backend"
+    depends_on:
+      - "db"
+    deploy:
+      replicas: 1
+      update_config:
+        parallelism: 2
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+  worker:
+    image: bretfisher/examplevotingapp_worker
+    networks:
+      - "frontend"
+      - "backend"
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels: [APP=VOTING]
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints: [ node.role == manager]
+        
+networks:
+    backend:
+        driver: overlay
+    frontend:
+        driver: overlay
+volumes:
+    db-data:
+        driver: local
+    secrets:
+        driver: local
+
+    
+    
+    
