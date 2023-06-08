@@ -11,3 +11,11 @@ $ watch docker service logs stack1_drupal
 
 $ docker ps
 
+http://localhost:8080
+postgresql
+
+db: postgres
+u: postgres
+p: password123
+host: postgres   -----> service of postgres name in docker-comp[ose file is postgres
+port: 5432
