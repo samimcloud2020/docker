@@ -1,0 +1,13 @@
+$ echo "password123" | docker secret create psql-pass -
+
+
+$ docker stack deploy -c docker-compose.yml stack1
+
+$ docker service ls
+
+$ docker stack ps < stack name>
+
+$ watch docker service logs stack1_drupal
+
+$ docker ps
+
