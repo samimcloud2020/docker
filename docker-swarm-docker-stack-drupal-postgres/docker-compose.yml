@@ -12,7 +12,7 @@ services:
   postgres:
     image: postgres:9.6
     environment:
-      - "POSTGRES_PASSWORD-FILE: /run/secrets/psql-pass"
+      - "POSTGRES_PASSWORD_FILE:/run/secrets/psql-pass"
     secrets:
       - psql-pass
     volumes:
