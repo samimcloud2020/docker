@@ -19,9 +19,13 @@ services:
       - drupal-data:/var/lib/postgresql/data
 volumes:
   drupal-modules:
+    driver: local
   drupal-profiles:
+    driver: local
   drupal-sites:
+    driver: local
   drupal-themes:
+    driver: local
 secrets:
   psql-pass:
     external: true    # means secret you create in CLI
