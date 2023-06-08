@@ -10,11 +10,13 @@ services:
       - drupal-sites:/var/www/html/sites
       - drupal-themes:/var/www/html/themes
   postgres:
-    image: postgres:9.6
+    image: postgres:9.4
     environment:
-      - "POSTGRES_PASSWORD_FILE:/run/secrets/psql-pass"
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pass
+      - POSTGRES_HOST-AUTH_METHOD:trust
+      
     secrets:
-      - psql-pass
+      - 'pass'
     volumes:
       - drupal-data:/var/lib/postgresql/data
 volumes:
@@ -29,7 +31,7 @@ volumes:
   drupal-data:
     driver: local
 secrets:
-  psql-pass:
+  pass:
     external: true    # means secret you create in CLI
     
     
