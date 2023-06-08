@@ -39,6 +39,8 @@ services:
         vault secrets enable -version=2 -path=secrets kv
         echo "Adding entries..."
         vault kv put secrets/dev psql_pass=mypass
+        echo "get entries......"
+        vault kv get secrets/dev
         echo "Complete..."
     cap_add:
       - IPC_LOCK
