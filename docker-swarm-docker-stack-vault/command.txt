@@ -1,0 +1,12 @@
+
+$docker stack deploy -c docker-compose.yml stack1
+$ docker service ls
+$docker stack ps stack1   ----know where vault container scheduled , worker/manager, go to that node
+
+$docker exec -it cid sh
+#export VAULT_ADDR=http://0.0.0.0:8200
+#vault status
+#vault login
+p: myroot  -----$docker service logs stack1_vault
+# vault secrets enable kv
+#vault kv put kv psql_pass=mypass
