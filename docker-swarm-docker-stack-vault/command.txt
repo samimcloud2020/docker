@@ -1,7 +1,7 @@
 
 $docker stack deploy -c docker-compose.yml stack1
 $ docker service ls
-$docker stack ps stack1   ----know where vault container scheduled , worker/manager, go to that node
+$docker stack ps stack1   ----know where vault container scheduled , worker/manager, go to that node $ docker ps --to get cid
 
 $docker exec -it cid sh
 #export VAULT_ADDR=http://0.0.0.0:8200
