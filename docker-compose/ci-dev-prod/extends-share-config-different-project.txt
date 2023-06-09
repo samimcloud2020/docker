@@ -1,0 +1,14 @@
+extends: <----------sharing of configuration among CI, DEV and PROD.
+
+$ cat common-services.yml
+
+
+
+
+
+$
+services:
+  web:
+    extends:
+      file: common-services.yml   < from this file
+      service: webapp   <------take config of service called webapp
