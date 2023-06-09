@@ -40,125 +40,6 @@ verify: Service converged
 
 [manager1] (local) root@192.168.0.13 ~
 $ docker service inspect svc1
-[
-    {
-        "ID": "j8005w4uzwgzhawqjjvtad1ym",
-        "Version": {
-            "Index": 72
-        },
-        "CreatedAt": "2023-06-09T14:16:54.896512549Z",
-        "UpdatedAt": "2023-06-09T14:16:54.89774505Z",
-        "Spec": {
-            "Name": "svc1",
-            "Labels": {},
-            "TaskTemplate": {
-                "ContainerSpec": {
-                    "Image": "nginx:1.13.7@sha256:edc8182581fdaa985a39b3021836aa09a69f9b966d1a0ff2f338be6f2fbfe238",
-                    "Init": false,
-                    "StopGracePeriod": 10000000000,
-                    "DNSConfig": {},
-                    "Isolation": "default"
-                },
-                "Resources": {
-                    "Limits": {},
-                    "Reservations": {}
-                },
-                "RestartPolicy": {
-                    "Condition": "any",
-                    "Delay": 5000000000,
-                    "MaxAttempts": 0
-                },
-                "Placement": {
-                    "Platforms": [
-                        {
-                            "Architecture": "amd64",
-                            "OS": "linux"
-                        },
-                        {
-                            "OS": "linux"
-                        },
-                        {
-                            "Architecture": "arm64",
-                            "OS": "linux"
-                        },
-                        {
-                            "Architecture": "386",
-                            "OS": "linux"
-                        },
-                        {
-                            "Architecture": "ppc64le",
-                            "OS": "linux"
-                        },
-                        {
-                            "Architecture": "s390x",
-                            "OS": "linux"
-                        }
-                    ]
-                },
-                "ForceUpdate": 0,
-                "Runtime": "container"
-            },
-            "Mode": {
-                "Replicated": {
-                    "Replicas": 1
-                }
-            },
-            "UpdateConfig": {
-                "Parallelism": 1,
-                "FailureAction": "pause",
-                "Monitor": 5000000000,
-                "MaxFailureRatio": 0,
-                "Order": "stop-first"
-            },
-            "RollbackConfig": {
-                "Parallelism": 1,
-                "FailureAction": "pause",
-                "Monitor": 5000000000,
-                "MaxFailureRatio": 0,
-                "Order": "stop-first"
-            },
-            "EndpointSpec": {
-                "Mode": "vip",
-                "Ports": [
-                    {
-                        "Protocol": "tcp",
-                        "TargetPort": 80,
-                        "PublishedPort": 8088,
-                        "PublishMode": "ingress"
-                    }
-                ]
-            }
-        },
-        "Endpoint": {
-            "Spec": {
-                "Mode": "vip",
-                "Ports": [
-                    {
-                        "Protocol": "tcp",
-                        "TargetPort": 80,
-                        "PublishedPort": 8088,
-                        "PublishMode": "ingress"
-                    }
-                ]
-            },
-            "Ports": [
-                {
-                    "Protocol": "tcp",
-                    "TargetPort": 80,
-                    "PublishedPort": 8088,
-                    "PublishMode": "ingress"
-                }
-            ],
-            "VirtualIPs": [
-                {
-                    "NetworkID": "50a8wjee16f22ri3egn6eykgj",
-                    "Addr": "10.0.0.11/24"
-                }
-            ]
-        }
-    }
-]
-
 
 
 [manager1] (local) root@192.168.0.13 ~
@@ -209,3 +90,99 @@ overall progress: 3 out of 5 tasks
 3/5: running   [==================================================>] 
 4/5: ready     [======================================>            ] 
 5/5:   
+----------------------The --update-delay flag configures the time delay between updates to a service task or sets of tasks. --------------------
+By default the scheduler updates 1 task at a time. 
+You can pass the --update-parallelism flag to configure the maximum number of service tasks that the scheduler updates simultaneously.
+
+WHEN UPDATE HAPPENS:----
+The scheduler applies rolling updates as follows by default:
+
+Stop the first task.
+Schedule update for the stopped task.
+Start the container for the updated task.
+If the update to a task returns RUNNING, wait for the specified delay period then start the next task.
+If, at any time during the update, a task returns FAILED, pause the update.
+
+
+
+
+$ docker service create --name svc1 -p 8080:80 --update-parallelism 2  --update-delay 10s nginx:1.13.7 
+rs7cd8hxk5poo08wba00fl9kh
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
+[manager1] (local) root@192.168.0.7 ~
+$ docker service scale svc1=10
+svc1 scaled to 10
+overall progress: 10 out of 10 tasks 
+1/10: running   [==================================================>] 
+2/10: running   [==================================================>] 
+3/10: running   [==================================================>] 
+4/10: running   [==================================================>] 
+5/10: running   [==================================================>] 
+6/10: running   [==================================================>] 
+7/10: running   [==================================================>] 
+8/10: running   [==================================================>] 
+9/10: running   [==================================================>] 
+10/10: running   [==================================================>] 
+verify: Service converged 
+[manager1] (local) root@192.168.0.7 ~
+$ docker service update --image nginx:1.13.6 svc1   --------> 2 task update at a time
+svc1
+overall progress: 2 out of 10 tasks 
+1/10: running   [==================================================>] 
+2/10: running   [==================================================>] 
+3/10: 
+4/10: 
+5/10:   
+6/10:   
+7/10:   
+8/10:   
+9/10:   
+10/10:   
+-------------------------------------------------------------------------------------------------------------------------------
+By default, when an update to an individual task returns a state of RUNNING, 
+the scheduler schedules another task to update until all tasks are updated.
+If at any time during an update a task returns FAILED, the scheduler pauses the update.
+
+
+----------------inspect a service------------------------------------------------------------------
+$ docker service inspect --pretty svc1
+
+ID:             rs7cd8hxk5poo08wba00fl9kh
+Name:           svc1
+Service Mode:   Replicated
+ Replicas:      10
+UpdateStatus:
+ State:         completed
+ Started:       4 minutes ago
+ Completed:     3 minutes ago
+ Message:       update completed
+Placement:
+UpdateConfig:
+ Parallelism:   2
+ Delay:         10s
+ On failure:    pause
+ Monitoring Period: 5s
+ Max failure ratio: 0
+ Update order:      stop-first
+RollbackConfig:
+ Parallelism:   1
+ On failure:    pause
+ Monitoring Period: 5s
+ Max failure ratio: 0
+ Rollback order:    stop-first
+ContainerSpec:
+ Image:         nginx:1.13.6@sha256:9fca103a62af6db7f188ac3376c60927db41f88b8d2354bf02d2290a672dc425
+ Init:          false
+Resources:
+Endpoint Mode:  vip
+Ports:
+ PublishedPort = 8080
+  Protocol = tcp
+  TargetPort = 80
+  PublishMode = ingress 
+
+
+
+
