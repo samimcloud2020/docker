@@ -1,0 +1,16 @@
+provides rolling replacement of tasks/containers of services.
+
+limits downtime be careful with prevent downtime.
+
+will replace conatiners for most changes.
+
+create option will usally change, adding -add and -rm to them.
+
+includes rollback and healthcheck options.
+
+also subcommand for scale and rollback:
+
+$ docker service scale web=4
+
+$ docker service rollback web
+
