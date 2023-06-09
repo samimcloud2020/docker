@@ -1,0 +1,27 @@
+Conceptually, both files serve the same purpose - deployment and configuration of your containers on docker engines.
+
+Docker-compose tool was created first and its purpose is "for defining and running
+multi-container Docker applications" on a single docker engine. (see docker compose overview )
+
+You use docker-compose up to create/update your containers, networks, volumes and so on.
+
+Where Docker Stack is used in Docker Swarm (Docker's orchestration and scheduling tool) and, therefore, 
+it has additional configuration parameters (i.e. replicas, deploy, roles) that are not needed on a single docker engine.
+
+The stack file is interpreted by docker stack command. This command can be invoked from a docker swarm manager only.
+
+
+--------------------------------------------------------------------------------
+File naming
+For docker-compose up the default file name is docker-compose.yml
+if no alternate file name is specified using -f (see the compose reference).
+It is common to use this default name and run the command without an argument.
+
+For docker stack deploy there is no default file given in the docker stack deploy reference. 
+You can use whatever name you want, however here are three conventions:
+
+use docker-stack.yml, as used in the official Docker for Beginners Ch.3: Deploying an app to a Swarm.
+use docker-cloud.yml, as used in the Docker Cloud Stack YML reference for the Docker Cloud service.
+use docker-compose.yml -- the old default name for the Compose file format.
+
+------------------------------------------------------------------------------------------------------
