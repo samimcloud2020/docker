@@ -1,0 +1,200 @@
+Docker compose supports the concatenation of different compose files to get a final configuration file with the configuration merged.
+
+$ cat docker-compose.yml
+version: "3.2"
+
+services:
+  whale:
+    image: docker/whalesay
+    command: ["cowsay", "hello!"]
+    
+$ docker-compose up 
+[+] Building 0.0s (0/0)                                                                                                                
+[+] Running 1/0
+ ✔ Container root-whale-1  Created                                                                                                0.0s 
+Attaching to root-whale-1
+root-whale-1  |  ________ 
+root-whale-1  | < hello! >
+root-whale-1  |  -------- 
+root-whale-1  |     \
+root-whale-1  |      \
+root-whale-1  |       \     
+root-whale-1  |                     ##        .            
+root-whale-1  |               ## ## ##       ==            
+root-whale-1  |            ## ## ## ##      ===            
+root-whale-1  |        /""""""""""""""""___/ ===        
+root-whale-1  |   ~~~ {~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===- ~~~   
+root-whale-1  |        \______ o          __/            
+root-whale-1  |         \    \        __/             
+root-whale-1  |           \____\______/   
+root-whale-1 exited with code 0
+
+
+$ cat docker-compose.second.yml
+version: "3.2"
+services:
+  whale:
+    command: ["cowsay", "bye!"]   #<-------------------------------------overrides
+    
+    --------------------see concatenation of both files---------------------------
+    $ docker-compose -f docker-compose.yml -f docker-compose.second.yml  config > 1.yml
+[manager1] (local) root@192.168.0.12 ~
+$ cat 1.yml
+name: root
+services:
+  whale:
+    command:
+    - cowsay
+    - bye!
+    image: docker/whalesay
+    networks:
+      default: null
+networks:
+  default:
+    name: root_default
+    
+    $ docker-compose -f docker-compose.yml -f docker-compose.second.yml  up
+[+] Building 0.0s (0/0)                                                                                                                
+[+] Running 1/0
+ ✔ Container root-whale-1  Recreated                                                                                              0.1s 
+Attaching to root-whale-1
+root-whale-1  |  ______ 
+root-whale-1  | < bye! >         <---------------------------see in place of hello, now bye as command is overrides
+root-whale-1  |  ------ 
+root-whale-1  |     \
+root-whale-1  |      \
+root-whale-1  |       \     
+root-whale-1  |                     ##        .            
+root-whale-1  |               ## ## ##       ==            
+root-whale-1  |            ## ## ## ##      ===            
+root-whale-1  |        /""""""""""""""""___/ ===        
+root-whale-1  |   ~~~ {~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===- ~~~   
+root-whale-1  |        \______ o          __/            
+root-whale-1  |         \    \        __/             
+root-whale-1  |           \____\______/   
+root-whale-1 exited with code 0
+    
+
+Fortunately compose is automatically searching for an specific file named docker-compose.override.yml 
+for overriding the docker-compose.yml values. If I rename the second file I’ll get the same
+result with just the initial command:
+
+$ mv docker-compose.second.yml docker-compose.override.yml
+$docker compose up ----------> mind it docker-compose.override.yml file is auto discovered and merged with docker-compose.yml
+$ docker-compose up
+[+] Building 0.0s (0/0)                                                                                                                
+[+] Running 1/0
+ ✔ Container root-whale-1  Created                                                                                                0.0s 
+Attaching to root-whale-1
+root-whale-1  |  ______ 
+root-whale-1  | < bye! >
+root-whale-1  |  ------ 
+root-whale-1  |     \
+root-whale-1  |      \
+root-whale-1  |       \     
+root-whale-1  |                     ##        .            
+root-whale-1  |               ## ## ##       ==            
+root-whale-1  |            ## ## ## ##      ===            
+root-whale-1  |        /""""""""""""""""___/ ===        
+root-whale-1  |   ~~~ {~~ ~~~~ ~~~ ~~~~ ~~ ~ /  ===- ~~~   
+root-whale-1  |        \______ o          __/            
+root-whale-1  |         \    \        __/             
+root-whale-1  |           \____\______/   
+root-whale-1 exited with code 0
+
+---------------------------------------------------------------------------------------------------------------------------------
+Variable interpolation
+Compose files support variable interpolation, and support default values. This means that you can do something like:
+
+services:
+  my-service:
+    build:
+      context: .
+    image: private.registry.mine/my-stack/my-service:${MY_SERVICE_VERSION:-latest}
+...
+And if you execute the docker-compose build (or push) without the $MY_SERVICE_VERSION environment variable, its value will be latest, 
+but if you assign a value to it before the build it will be used when build or pushed to the private.registry.mine registry.
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+$ docker-compose -f a.yml -f b.yml -f c.yml  config > output.yml
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+CI ENV:   docker-compose
+DEV ENV: docker-compose
+PROD ENV: docker stack deploy
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+Let’s see it with a simple example.
+
+# docker-compose.yml
+...
+services:
+  my-service:
+    build:
+      context: .
+    image: private.registry.mine/my-stack/my-service:${MY_SERVICE_VERSION:-latest}
+    environment:
+      API_ENDPOINT: ${API_ENDPOINT:-https://production.my-api.com}
+...
+And
+
+# docker-compose.override.yml
+...
+services:
+  my-service:
+    ports: # This is needed for development!
+      - 80:80
+    environment:
+      API_ENDPOINT: https://devel.my-api.com
+    volumes:
+      - ./:/project/src
+...
+I can use the docker-compose command (docker-compose up) to launch my stack in dev mode, 
+with the source code mounted in /project/src.
+
+I can use this same configuration files in production! And I could reuse exactly 
+the same docker-compose.yml file for staging. To deploy this into production 
+I just need to build and push the image with a predefined tag in my CI stage:
+
+export MY_SERVICE_VERSION=1.2.3
+docker-compose -f docker-compose.yml build
+docker-compose -f docker-compose.yml push
+
+--------->
+In production this can be launched with just the commands below:
+
+export MY_SERVICE_VERSION=1.2.3
+docker stack deploy my-stack --compose-file docker-compose.yml --with-registry-auth
+
+
+And if you want to do the same in staging it’s as easy as to define the environment variable needed for staging:
+
+export MY_SERVICE_VERSION=1.2.3
+export API_ENDPOINT=http://staging.my-api.com
+docker stack deploy my-stack --compose-file docker-compose.yml --with-registry-auth
+
+
+With all these things into consideration we have used docker compose files, two as much in my examples
+and without duplicate configurations, to any of your environments!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+ 
