@@ -14,3 +14,13 @@ $ docker service scale web=4
 
 $ docker service rollback web
 
+A stack deploy when pre-existing will issue service updates.
+
+------------------update the image used to newer version----------------
+$ docker service update --image myapp:1.2 <serv name>
+
+---------------adding env variable and remove a port----------------------
+$ docker service update --env-add NODE_VENV=production --publish-rm 8080
+  
+  NOTE: --env-add    --env-rm   --publish-rm  --publish-add
+---------
