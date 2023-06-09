@@ -1,0 +1,82 @@
+docker 1.2----> health check starts.
+
+support in docker run, docker-compose, docker swarm.
+
+docker engine will exec a command in a container.
+
+it expects         error---->exit 1, ok ---> exit 0.
+
+3 state: starting, healthy, unhealthy
+
+not  external monitoring replacement.
+
+$docker container ls  ----> see health
+
+$ docker container inspect < cid>   ---->check last 5 healthchecks.
+
+$docker run  ---> nothing do with health checks.
+
+but services will replace taskls , if they fail healthchecks.
+
+service updates wait for them before continuing.
+----------------------docker run     healthcheck------------------------------------------------------------------------------
+$ docker run --health-cmd="curl -f localhost:9200 /_cluster/health || false " --health-interval=5s --health-retries=3 --health-timeout=3s --health-start-period=15s elasticsearch:2
+
+-----------------healthcheck options in Dockerfile---------------------------------------------------------
+--interval   default:30s
+--timeout   default: 30s
+--start-period default: 0s 
+--retries    default: 3
+
+HEALTHCHECK curl -f http://localhost/ || false    <---------------Dockerfile default option 
+
+Dockerfile Custom option:-----------
+HEALTHCHECK --timeout=2s --interval=3s --retries=3
+CMD   curl -f http://localhost/ | exit 1
+
+----------------------nginx--------------------------------------------------------
+
+FROM nginx:1.13
+HEALTHCHECK --interval=30s --timeout=3s 
+CMD curl -f http://localhost/ || exit 1
+
+-----------------------------php  nginx Dockerfile--------------------------------------------------------------------------------------------------
+FROM    
+HEALTHCKECK --interval=5s --timeout=3s
+CMD curl -f http://localhost/ping  || exit 1
+-------------------------------postgres to test ready-------------------------------------------------------------------------------------------------------------
+FROM postgres
+HEALTHCHECK --interval=5s --timeout=3s
+CMD pg_isready -U postgres || exit 1
+
+--------------------docker-compose.yml-------------------------------------------------------------------
+version: '3.1'
+services:
+  nginx:
+    image: nginx
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 1m
+      -------------------------------------------------------------------------------------------
+      $ docker run --name p1 -d postgres
+      
+      $docker container ls   ---> no healthcheck seen
+      
+      
+      $ docker run --name p2 -d --health-cmd="pg_isready -U postgres || exit 1" postgres
+      
+      $ docker container ls -----> seen healthcheck
+      
+      $ docker container inspect <cid>  -----> see healthcheck
+      
+      starting, healthy, unhealthy
+      
+      ------------------------------------------------------------------------------------------------
+      $ docker service create --name p1 postgres   ----> starting to running, no healthcheck
+      
+      $ docker service create  --name p2 --health-cmd="pg_isready -U postgres || exit 1" postgres
+      
+      
