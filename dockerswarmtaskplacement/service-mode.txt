@@ -1,0 +1,16 @@
+DEFAULT: replicated
+global: one task per node.
+--------------place one task per node in swarm-------------------------
+$ docker service create --mode global nginx   ----> one task per node
+
+-----------place one task on each workers swarm-----------------------
+$ docker service create --name svc1 --mode global --constraint=node.role==worker nginx
+
+-----------------docker stack----------------------------------------------------------------------------------------------------------
+version: '3.1'
+services:
+  web:
+    image: nginx
+    deploy:
+      mode:global
+----------------------------------------------------------------------------------------------------------------------------------------
