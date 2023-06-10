@@ -1,0 +1,144 @@
+schedule least used node for task.
+
+----------------node labels and service constraint ( ke/values-------------------------------------------------------------------------------
+
+
+
+
+---------------service modes (replicated/global)------------------------------------------------------------------------------------------------
+
+
+
+---------------docker 17.04 plus   placement preferences(spread)----------------------------------------------------------------------------------
+
+
+
+----------------node avalability(active, pause, drain)-----------------------------------------------------------------------------------------------
+
+
+
+--------------------resource requirements (cpu and memory)----------------------------------------------------------------------------------------------
+
+
+1. service constraints:------
+
+can filter task placement based on built-in or custom labels
+
+can be added at create time, or add/remove a update time
+
+creates a hard requirement , placement fails if not matched.
+
+support multiple constraints.
+
+supports either a key or key/value.
+
+can match ==.or !=.
+
+labels can be node.labels or engine.labels
+
+node.labels can only added via  manager  to raft log.
+
+engine.labels added to daemon.json to any node { "labels":["dmz=.true"]}
+
+default to using node.labels, use engine labels for autoscaling hardware and os.
+***********************************************SERVICE CONSTRAINT********************************************************************************************************
+-----------------place only on manage (two options)-----------------------
+
+$ docker service create --constraint=node.role==manager nginx
+
+or
+$ docker service create --constraint=node.role!=worker nginx
+
+*********let add label to node2 for dmz=true and constraint to it.
+
+$ docker service update --label-add=dmz=true node2
+
+$ docker service create --constraint=node.labels.dmz==true nginx
+
+--------------------------------------------------------------------------------------------------------------------------------
+$ docker service create --name app1 --constraint=node.role=worker nginx ----> nginx schedule on worker.
+
+$ docker service update --constraint-rm=node.role==worker --constraint-add=node.role==manager app1  ---> now  schedule on manager
+---------------------------------------------------------------------------------------------------------------------------------
+$ docker node update --label-add=dmz=true node2
+$ docker service create --name dmz-nginx --constraint=node.labels.dmz==true --replicas=2 nginx
+
+------------------------------docker stack----------------------------------------------------------------------------------------------------
+version: '3.1'
+services:
+  db:
+    image: mysql:5.7
+    deploy:
+      placement:
+        constraints:
+          - node.labels.disk==ssd
+          
+-------------------built-in labels--------------------------------------------------------------------------------------------------
+$ docker node ls
+
+node.id
+node.hostname
+node.ip
+node.role    (manager or worker)
+node.platform.os   (linux or windows)
+node.platform.arch (x86_64 or arm64 or 386)
+node.labels 
+-----------remove service and labels----------------------------------------------
+$ docker service rm app1 dmznginx
+$ docker node update --label-rm dmz node2
+
+^***********************************************************************************************************************************************************
+
+
+$ docker service create  --name svc1 --constraint node.role==manager nginx
+5v84x1x4ncgkjsiv9jrlrqwzx
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
+
+
+[manager1] (local) root@192.168.0.8 ~
+$ docker node ls
+ID                            HOSTNAME   STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
+bqc1amsshqzbj9znfygvo45n6 *   manager1   Ready     Active         Reachable        24.0.2
+x5j7dh6nh5i86231hfhhyu6zx     manager2   Ready     Active         Reachable        24.0.2
+l4tdbb9gqhd0y3uzmhbbcmfpc     manager3   Ready     Active         Leader           24.0.2
+7xs52mpw6tgubh9wuieev94b2     worker1    Ready     Active                          24.0.2
+vefltlzwynqbu6jrtd1dsxl7r     worker2    Ready     Active                          24.0.2
+
+-----------------------------------------------------------------------------------------------------------------------------
+$ docker node update --label-add dmz=true worker1
+worker1
+
+[manager1] (local) root@192.168.0.8 ~
+$ docker service create --name svc2  --constraint=node.labels.dmz==true nginx
+cn6lecbltrwt7jsn7dg2be3a1
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
+
+
+-------------------------------------------------------------------------------------------------------------------------------
+$ docker node update --label-add dmz=true worker1
+worker1
+
+
+$ docker service create --name svc10  --constraint=node.labels.dmz==true nginx
+3bfneym4ismfa0n91ululoc37
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
+
+
+
+[manager1] (local) root@192.168.0.8 ~
+$ docker service update  --label-rm dmz=true --label-add x=y svc10  > node(worker1)  label dmz=true and now svc label changed from dmz=true to x=y but still schedule on worker1.
+svc10
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
+------------------------------------------------------------------------------------------------------------------------------------------
+$ docke node update --label-add x=y --label-rm dmz=true worker1
+
+
+
