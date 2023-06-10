@@ -1,5 +1,13 @@
 DEFAULT: replicated
 global: one task per node.
+
+While global mode services guaranty that exactly one replica of a service is running
+on each node that fulfills the placement constraints,
+
+the same is not necessarily true for replicate mode services. Replicated mode services are usualy fanned out accross the nodes,
+but could also be placed on a single node.
+
+
 --------------place one task per node in swarm-------------------------
 $ docker service create --mode global nginx   ----> one task per node
 
