@@ -13,6 +13,9 @@ $ docker node update --label-add azone=2 node2
 $ docker node update --label-add azone=3 node3
 
 $ docker service create --name svc1 --placement-pref=spread=node.labels.azone --replicas 3 nginx
+
+$ docker service scale svc1=10   -----> all nodes service tasks are scheduled (node1, node2, node3)
+
 ----------------------------------------------------------------------------------------------------------------------
 $ docker node ls
 ID                            HOSTNAME   STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
@@ -23,6 +26,7 @@ j98sk05w7cuhois98oyh1oib4     worker1    Ready     Active                       
 h5qpwe5w6w6e91rgi6wfhubpu     worker2    Ready     Active                          24.0.2
 [manager2] (local) root@192.168.0.5 ~
 $ docker node update --label-add=azone=1 worker1
+
 worker1
 [manager2] (local) root@192.168.0.5 ~
 $ docker node update --label-add=azone=2 worker2
@@ -34,3 +38,6 @@ overall progress: 2 out of 2 tasks
 1/2: running   [==================================================>] 
 2/2: running   [==================================================>] 
 verify: Service converged 
+
+
+
