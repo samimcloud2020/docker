@@ -1,0 +1,36 @@
+^^^^^^^^^^^^^^^^^^^service placement preference^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Only one stertagy:   spread
+
+spreads tasks among all values of labels.
+
+good to ensure distribution among AZ,DC, RACKS, SUBNETS.
+
+won't move service task , if label change.
+
+$ docker node update --label-add azone=1 node1
+$ docker node update --label-add azone=2 node2
+$ docker node update --label-add azone=3 node3
+
+$ docker service create --name svc1 --placement-pref=spread=node.labels.azone --replicas 3 nginx
+----------------------------------------------------------------------------------------------------------------------
+$ docker node ls
+ID                            HOSTNAME   STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
+ny64vy54oib1gei0dsn1le8xm     manager1   Ready     Active         Reachable        24.0.2
+yb4r4fsbc84pk4byndqjpdk6o *   manager2   Ready     Active         Reachable        24.0.2
+lkexia10qv68odmjdap1x802j     manager3   Ready     Active         Leader           24.0.2
+j98sk05w7cuhois98oyh1oib4     worker1    Ready     Active                          24.0.2
+h5qpwe5w6w6e91rgi6wfhubpu     worker2    Ready     Active                          24.0.2
+[manager2] (local) root@192.168.0.5 ~
+$ docker node update --label-add=azone=1 worker1
+worker1
+[manager2] (local) root@192.168.0.5 ~
+$ docker node update --label-add=azone=2 worker2
+worker2
+[manager2] (local) root@192.168.0.5 ~
+$ docker service create --name svc1 --placement-pref=spread=node.labels.azone --replicas 2 nginx
+ky9ibr3m8h316w781eee815qg
+overall progress: 2 out of 2 tasks 
+1/2: running   [==================================================>] 
+2/2: running   [==================================================>] 
+verify: Service converged 
