@@ -16,6 +16,10 @@ $ docker service create --name svc1 --placement-pref=spread=node.labels.azone --
 
 $ docker service scale svc1=10   -----> all nodes service tasks are scheduled (node1, node2, node3)
 
+
+$ docker service update --constraint-add node.role==manager svc1  ----> all moved to manager.
+
+
 ----------------------------------------------------------------------------------------------------------------------
 $ docker node ls
 ID                            HOSTNAME   STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
