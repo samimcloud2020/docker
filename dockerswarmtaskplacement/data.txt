@@ -119,4 +119,27 @@ verify: Service converged
 
 
 -------------------------------------------------------------------------------------------------------------------------------
+$ docker node update --label-add dmz=true worker1
+worker1
+
+
+$ docker service create --name svc10  --constraint=node.labels.dmz==true nginx
+3bfneym4ismfa0n91ululoc37
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
+
+
+
+[manager1] (local) root@192.168.0.8 ~
+$ docker service update  --label-rm dmz=true --label-add x=y svc10  > node(worker1)  label dmz=true and now svc label changed from dmz=true to x=y but still schedule on worker1.
+svc10
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
+------------------------------------------------------------------------------------------------------------------------------------------
+$ docke node update --label-add x=y --label-rm dmz=true worker1
+
+
+
 
