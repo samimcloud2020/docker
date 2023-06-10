@@ -90,6 +90,33 @@ $ docker node update --label-rm dmz node2
 ^***********************************************************************************************************************************************************
 
 
+$ docker service create  --name svc1 --constraint node.role==manager nginx
+5v84x1x4ncgkjsiv9jrlrqwzx
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
 
 
+[manager1] (local) root@192.168.0.8 ~
+$ docker node ls
+ID                            HOSTNAME   STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
+bqc1amsshqzbj9znfygvo45n6 *   manager1   Ready     Active         Reachable        24.0.2
+x5j7dh6nh5i86231hfhhyu6zx     manager2   Ready     Active         Reachable        24.0.2
+l4tdbb9gqhd0y3uzmhbbcmfpc     manager3   Ready     Active         Leader           24.0.2
+7xs52mpw6tgubh9wuieev94b2     worker1    Ready     Active                          24.0.2
+vefltlzwynqbu6jrtd1dsxl7r     worker2    Ready     Active                          24.0.2
+
+-----------------------------------------------------------------------------------------------------------------------------
+$ docker node update --label-add dmz=true worker1
+worker1
+
+[manager1] (local) root@192.168.0.8 ~
+$ docker service create --name svc2  --constraint=node.labels.dmz==true nginx
+cn6lecbltrwt7jsn7dg2be3a1
+overall progress: 1 out of 1 tasks 
+1/1: running   [==================================================>] 
+verify: Service converged 
+
+
+-------------------------------------------------------------------------------------------------------------------------------
 
