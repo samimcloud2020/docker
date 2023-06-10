@@ -1,0 +1,95 @@
+schedule least used node for task.
+
+----------------node labels and service constraint ( ke/values-------------------------------------------------------------------------------
+
+
+
+
+---------------service modes (replicated/global)------------------------------------------------------------------------------------------------
+
+
+
+---------------docker 17.04 plus   placement preferences(spread)----------------------------------------------------------------------------------
+
+
+
+----------------node avalability(active, pause, drain)-----------------------------------------------------------------------------------------------
+
+
+
+--------------------resource requirements (cpu and memory)----------------------------------------------------------------------------------------------
+
+
+1. service constraints:------
+
+can filter task placement based on built-in or custom labels
+
+can be added at create time, or add/remove a update time
+
+creates a hard requirement , placement fails if not matched.
+
+support multiple constraints.
+
+supports either a key or key/value.
+
+can match ==.or !=.
+
+labels can be node.labels or engine.labels
+
+node.labels can only added via  manager  to raft log.
+
+engine.labels added to daemon.json to any node { "labels":["dmz=.true"]}
+
+default to using node.labels, use engine labels for autoscaling hardware and os.
+***********************************************SERVICE CONSTRAINT********************************************************************************************************
+-----------------place only on manage (two options)-----------------------
+
+$ docker service create --constraint=node.role==manager nginx
+
+or
+$ docker service create --constraint=node.role!=worker nginx
+
+*********let add label to node2 for dmz=true and constraint to it.
+
+$ docker service update --label-add=dmz=true node2
+
+$ docker service create --constraint=node.labels.dmz==true nginx
+
+--------------------------------------------------------------------------------------------------------------------------------
+$ docker service create --name app1 --constraint=node.role=worker nginx ----> nginx schedule on worker.
+
+$ docker service update --constraint-rm=node.role==worker --constraint-add=node.role==manager app1  ---> now  schedule on manager
+---------------------------------------------------------------------------------------------------------------------------------
+$ docker node update --label-add=dmz=true node2
+$ docker service create --name dmz-nginx --constraint=node.labels.dmz==true --replicas=2 nginx
+
+------------------------------docker stack----------------------------------------------------------------------------------------------------
+version: '3.1'
+services:
+  db:
+    image: mysql:5.7
+    deploy:
+      placement:
+        constraints:
+          - node.labels.disk==ssd
+          
+-------------------built-in labels--------------------------------------------------------------------------------------------------
+$ docker node ls
+
+node.id
+node.hostname
+node.ip
+node.role    (manager or worker)
+node.platform.os   (linux or windows)
+node.platform.arch (x86_64 or arm64 or 386)
+node.labels 
+-----------remove service and labels----------------------------------------------
+$ docker service rm app1 dmznginx
+$ docker node update --label-rm dmz node2
+
+^***********************************************************************************************************************************************************
+
+
+
+
+
