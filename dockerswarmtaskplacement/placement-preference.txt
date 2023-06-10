@@ -19,7 +19,14 @@ $ docker service scale svc1=10   -----> all nodes service tasks are scheduled (n
 
 $ docker service update --constraint-add node.role==manager svc1  ----> all moved to manager.
 
-
+version: "3.1"
+services:
+  web:
+    image: nginx
+    deploy:
+      placement:
+        preferences:
+          spread: node.labels.azone
 ----------------------------------------------------------------------------------------------------------------------
 $ docker node ls
 ID                            HOSTNAME   STATUS    AVAILABILITY   MANAGER STATUS   ENGINE VERSION
