@@ -43,8 +43,31 @@ fs7pt4a24a9l   stack1_worker   global       2/2        bretfisher/examplevotinga
 xdl3e1c94ibg   svc1            replicated   5/5        nginx:latest                                *:80->80/tcp
 
 
-$ docker service logs stack1_result    ---------> service logs 
+$ docker service logs stack1_result    ---------> service logs of svc id
 
-$ docker service logs 
-
+for task id:---------------------------------------------------------------------------------------------------------------------------------------------
+$ docker stack ps stack1
+ID             NAME                                          IMAGE                                       NODE       DESIRED STATE   CURRENT STATE            ERROR                              PORTS
+87jjhujn1rs8   stack1_db.1                                   postgres:9.4                                           Running         Pending 6 minutes ago    "no suitable node (scheduling …"   
+lk14hz72r38b   stack1_redis.1                                redis:alpine                                manager1   Running         Running 6 minutes ago                                       
+ryr1zshiewo7    \_ stack1_redis.1                            redis:alpine                                manager1   Shutdown        Shutdown 6 minutes ago                                      
+de5xeo7pgqqr   stack1_result.1                               bretfisher/examplevotingapp_result:latest   manager1   Running         Running 5 minutes ago                                       
+ifds2af7xrxm    \_ stack1_result.1                           bretfisher/examplevotingapp_result:latest   manager3   Shutdown        Shutdown 6 minutes ago                                      
+djty83m1hjx6   stack1_vote.1                                 bretfisher/examplevotingapp_vote:latest     worker1    Running         Running 6 minutes ago                                       
+wjwga3tqugve    \_ stack1_vote.1                             bretfisher/examplevotingapp_vote:latest     worker2    Shutdown        Shutdown 6 minutes ago                                      
+stw23is16fnn   stack1_vote.2                                 bretfisher/examplevotingapp_vote:latest     worker1    Running         Running 6 minutes ago                                       
+io012uqomt9t    \_ stack1_vote.2                             bretfisher/examplevotingapp_vote:latest     worker1    Shutdown        Shutdown 6 minutes ago                                      
+hirp4njy36y3   stack1_worker.4lnysh5chmb1lafz7odcsvucw       bretfisher/examplevotingapp_worker:latest   worker2    Running         Running 6 minutes ago                                       
+je4qsozs2pbw    \_ stack1_worker.4lnysh5chmb1lafz7odcsvucw   bretfisher/examplevotingapp_worker:latest   worker2    Shutdown        Shutdown 6 minutes ago                                      
+7irtl1rw6bxi   stack1_worker.x33exl7az5mp5rlye0niucf0w       bretfisher/examplevotingapp_worker:latest   worker1    Running         Running 6 minutes ago                                       
+z575z4ea0nc7    \_ stack1_worker.x33exl7az5mp5rlye0niucf0w   bretfisher/examplevotingapp_worker:latest   worker1    Shutdown        Shutdown 6 minutes ago                                      
+$ docker service logs lk14hz72r38b   -------------> with task id
+stack1_redis.1.lk14hz72r38b@manager1    | 1:C 12 Jun 2023 10:17:25.008 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+stack1_redis.1.lk14hz72r38b@manager1    | 1:C 12 Jun 2023 10:17:25.009 # Redis version=7.0.11, bits=64, commit=00000000, modified=0, pid=1, just started
+stack1_redis.1.lk14hz72r38b@manager1    | 1:C 12 Jun 2023 10:17:25.009 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+stack1_redis.1.lk14hz72r38b@manager1    | 1:M 12 Jun 2023 10:17:25.011 * monotonic clock: POSIX clock_gettime
+stack1_redis.1.lk14hz72r38b@manager1    | 1:M 12 Jun 2023 10:17:25.016 * Running mode=standalone, port=6379.
+stack1_redis.1.lk14hz72r38b@manager1    | 1:M 12 Jun 2023 10:17:25.017 # WARNING: The TCP backlog setting of 511 cannot be enforced because /proc/sys/net/core/somaxconn is set to the lower value of 128.
+stack1_redis.1.lk14hz72r38b@manager1    | 1:M 12 Jun 2023 10:17:25.017 # Server initialized
+stack1_redis.1.lk14hz72r38b@manager1    | 1:M 12 Jun 2023 10:17:25.018 * Ready to accept connections
 
