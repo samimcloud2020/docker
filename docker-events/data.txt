@@ -1,0 +1,2 @@
+Action taken logs for docker engine and swarm.
+( network create, 
