@@ -1,0 +1,38 @@
+set at service create/update, but are controlled per container.
+
+set for cpu and memory, reserving and limiting.
+
+maximum given to a container:    --limit-cpu  0.5    --limit-memory 256M
+
+be aware of OOME ( with or without limit)
+
+-------------------------------------------------------------------------
+reserver cpu and memory
+
+$ docker service create --reserve-memory 512M --reserve-cpu 1  mysql
+
+-----------------------------------------------------------------------------
+limit cpu and memory
+
+$ docker service create --limit-memory 150M  --limit-cpu 0.25 nginx
+
+-----------------------------------------------------------------------------
+remove them to update 0
+
+$ docker service update --limit-memory 0 --limit-cpu 0 svc1
+
+---------------------------------------------------------------------------------
+version: "3.1"
+service:
+  web:
+    image: nginx
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 500M
+  ---------------------------------------------------------------------------------------------------        
+          
