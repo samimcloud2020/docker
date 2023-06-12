@@ -13,6 +13,38 @@ $ docker service logs --raw --no-trunc < svc name/svc id> --------------return u
 
 $ docker service logs --tail 50 --follow < svc n/svc id>   ----last 50 log entries & all future logs.
 
+$ docker stack deploy -c docker-compose.yml stack1
+Creating network stack1_backend
+Creating network stack1_frontend
+Creating service stack1_redis
+Creating service stack1_db
+Creating service stack1_vote
+Creating service stack1_result
+Creating service stack1_worker
+[manager1] (local) root@192.168.0.18 ~
+$ docker stack ps stack1
+ID             NAME                                      IMAGE                                       NODE       DESIRED STATE   CURRENT STATE              ERROR                              PORTS
+87jjhujn1rs8   stack1_db.1                               postgres:9.4                                           Running         Pending 12 seconds ago     "no suitable node (scheduling …"   
+ryr1zshiewo7   stack1_redis.1                            redis:alpine                                manager1   Running         Running 5 seconds ago                                         
+ifds2af7xrxm   stack1_result.1                           bretfisher/examplevotingapp_result:latest   manager3   Running         Preparing 12 seconds ago                                      
+wjwga3tqugve   stack1_vote.1                             bretfisher/examplevotingapp_vote:latest     worker2    Running         Preparing 12 seconds ago                                      
+io012uqomt9t   stack1_vote.2                             bretfisher/examplevotingapp_vote:latest     worker1    Running         Preparing 12 seconds ago                                      
+je4qsozs2pbw   stack1_worker.4lnysh5chmb1lafz7odcsvucw   bretfisher/examplevotingapp_worker:latest   worker2    Running         Preparing 11 seconds ago                                      
+z575z4ea0nc7   stack1_worker.x33exl7az5mp5rlye0niucf0w   bretfisher/examplevotingapp_worker:latest   worker1    Running         Preparing 11 seconds ago                      
 
+
+$ docker service ls
+ID             NAME            MODE         REPLICAS   IMAGE                                       PORTS
+edlsk7kfgqm0   stack1_db       replicated   0/1        postgres:9.4                                
+nrul6wg7qex8   stack1_redis    replicated   1/1        redis:alpine                                *:30000->6379/tcp
+wlby567qjagl   stack1_result   replicated   1/1        bretfisher/examplevotingapp_result:latest   *:5001->80/tcp
+qcyeu8z4sbl8   stack1_vote     replicated   2/2        bretfisher/examplevotingapp_vote:latest     *:5000->80/tcp
+fs7pt4a24a9l   stack1_worker   global       2/2        bretfisher/examplevotingapp_worker:latest   
+xdl3e1c94ibg   svc1            replicated   5/5        nginx:latest                                *:80->80/tcp
+
+
+$ docker service logs stack1_result    ---------> service logs 
+
+$ docker service logs 
 
 
