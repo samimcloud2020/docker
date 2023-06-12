@@ -1,0 +1,18 @@
+Like Conatiner log $ Docker container logs <cid>
+service logs:   also aggregate logs of all tasks.
+
+service log:
+can return all tasks log or one task log.
+does not work if use --log-driver for sending logs.
+
+$ docker service logs < svc name/svc id>  --------return all logs of service with all tasks.
+
+$ docker service logs < task id>   --------------return logs of one task.
+
+$ docker service logs --raw --no-trunc < svc name/svc id> --------------return unformatted logs with no  trunking.
+
+$ docker service logs --tail 50 --follow < svc n/svc id>   ----last 50 log entries & all future logs.
+
+
+
+
