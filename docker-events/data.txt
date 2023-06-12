@@ -1,2 +1,26 @@
 Action taken logs for docker engine and swarm.
-( network create, 
+( network create, service update, container start)
+
+has serach (filtering and formating)
+
+limited to last 1000 events (no logs stored on disk).
+
+two scope:  local and swarm.
+
+not same as dockerd (journald) log , no error log.
+
+future events:   $ docker events
+
+$ docker events --since 2017-12-01
+
+$ docker events --since 2017-12-01T12:30:00
+
+$docker events --since 1h30m
+
+$ docker events --since 1h --filter event=start
+
+$ docker events --since 1h --filter scope=swarm --filter type=network  ----only returend swarm related events for networks.
+
+
+
+
