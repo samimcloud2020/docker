@@ -19,7 +19,7 @@ services:
     image: postgres:9.4
     deploy:
       placement:
-        constraint:
+        constraints:
           - node.labels.ssd == true
     environment:
         POSTGRES_PASSWORD: mypass
