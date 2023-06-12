@@ -35,5 +35,204 @@ they allocate memory as-needed
 they will cause OOM issues if they pass some limit, or host runs out of memory.
 
 
+$ docker info
+Client:
+ Version:    24.0.2
+ Context:    default
+ Debug Mode: false
+ Plugins:
+  buildx: Docker Buildx (Docker Inc.)
+    Version:  v0.10.5
+    Path:     /usr/local/libexec/docker/cli-plugins/docker-buildx
+  compose: Docker Compose (Docker Inc.)
+    Version:  v2.18.1
+    Path:     /usr/local/libexec/docker/cli-plugins/docker-compose
+
+Server:
+ Containers: 1
+  Running: 1
+  Paused: 0
+  Stopped: 0
+ Images: 1
+ Server Version: 24.0.2
+ Storage Driver: overlay2
+  Backing Filesystem: xfs
+  Supports d_type: true
+  Using metacopy: false
+  Native Overlay Diff: true
+  userxattr: false
+ Logging Driver: json-file
+ Cgroup Driver: cgroupfs
+ Cgroup Version: 1
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local logentries splunk syslog
+ Swarm: active
+  NodeID: 4apea18iq8plnc7hsvdqsh85c
+  Is Manager: true
+  ClusterID: 27a0283fzv684mwkydd9xym7d
+  Managers: 3
+  Nodes: 5
+  Default Address Pool: 10.0.0.0/8  
+  SubnetSize: 24
+  Data Path Port: 4789
+  Orchestration:
+   Task History Retention Limit: 5
+  Raft:
+   Snapshot Interval: 10000
+   Number of Old Snapshots to Retain: 0
+   Heartbeat Tick: 1
+   Election Tick: 10
+  Dispatcher:
+   Heartbeat Period: 5 seconds
+  CA Configuration:
+   Expiry Duration: 3 months
+   Force Rotate: 0
+  Autolock Managers: false
+  Root Rotation In Progress: false
+  Node Address: 192.168.0.17
+  Manager Addresses:
+   192.168.0.14:2377
+   192.168.0.16:2377
+   192.168.0.17:2377
+ Runtimes: io.containerd.runc.v2 runc
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: 1677a17964311325ed1c31e2c0a3589ce6d5c30d
+ runc version: v1.1.7-0-g860f061
+ init version: de40ad0
+ Security Options:
+  apparmor
+  seccomp
+   Profile: builtin
+ Kernel Version: 4.4.0-210-generic
+ Operating System: Alpine Linux v3.18 (containerized)
+ OSType: linux
+ Architecture: x86_64
+ CPUs: 8
+ Total Memory: 31.42GiB
+ Name: manager1
+ ID: 8c68d672-bf9c-4ec2-a6e4-daf51de61cff
+ Docker Root Dir: /var/lib/docker
+ Debug Mode: true
+  File Descriptors: 55
+  Goroutines: 145
+  System Time: 2023-06-12T07:54:33.059603461Z
+  EventsListeners: 0
+ Experimental: true
+ Insecure Registries:
+  127.0.0.1
+  127.0.0.0/8
+ Live Restore Enabled: false
+ Product License: Community Engine
+
+WARNING: API is accessible on http://0.0.0.0:2375 without encryption.
+         Access to the remote API is equivalent to root access on the host. Refer
+         to the 'Docker daemon attack surface' section in the documentation for
+         more information: https://docs.docker.com/go/attack-surface/
+WARNING: No swap limit support   ------------------------------------>
+WARNING: bridge-nf-call-iptables is disabled
+WARNING: bridge-nf-call-ip6tables is disabled
+
+--------------------------------------------------------------------
+If you receive the output WARNING: No swap limit support, limiting resources has not been enabled by default.
 
 
+2. To add this option, edit the grub configuration file. Open the file in a text editor of your choice (we are using nano):
+
+sudo nano /etc/default/grub
+
+3. Then, add the following line:
+
+GRUB_CMDLINE_LINUX="cdgroup_enable=memory swapaccount=1"
+
+4.Then, update the grub configuration with the command:
+
+sudo update-grub
+5.  $ docker info
+
+--------------------------------------------------------------------------------------------------------------------
+
+Limit Docker Container Memory Access
+There are several RAM limitations you can set for a Docker container. Some of them include:
+
+Configuring the maximum amount of memory a container can use.
+Defining the amount of memory a Docker container can swap to disk.
+Setting the soft limit for the amount of memory assigned to a container.
+------------------------set max memory access----------------------------------------------------------------------------
+Set Maximum Memory Access 
+To limit the maximum amount of memory usage for a container, add the --memory option to the docker run command. Alternatively, you can use the shortcut -m.
+
+Within the command, specify how much memory you want to dedicate to that specific container.
+
+The command should follow the syntax:
+
+sudo docker run -it --memory="[memory_limit]" [docker_image]
+
+The value of memory_limit should be a positive integer followed by the suffix b, k, m, or g 
+(short for bytes, kilobytes, megabytes, or gigabytes). For example, to limit the container with 1 GB of RAM, add --memory="1g".
+
+For example, to run an instance of an Ubuntu container and set the memory limit to 1 GB, the command is:
+
+sudo docker run -it --memory="1g" ubuntu
+--------------------------swap to disk memory limit--------------------------------------------------------------------------
+Set Swap to Disk Memory Limit
+Using the swap option allows you to store data even after all RAM assigned to the container has been used up.
+It does this by ignoring the memory limitation and writing directly to the disk. Although this is a useful feature,
+it is not a recommended practice as it slows down performance.
+
+To configure this additional RAM space, define the total amount of swap memory. Before doing this, 
+you should already have the maximum memory (--memory) of the non-swap memory set.
+The swap includes the total amount of non-swap memory plus the amount of swap memory reserved as backup.
+
+For example, if you set --memory to 1 GB, as in the example above, the amount of 
+swap memory needs to be more than that. To run a container with an additional 1 GB of swap memory, 
+set the swap memory to 2 GB.
+
+The syntax for running a container with limited memory and additional swap memory is:
+
+sudo docker run -it --memory="[memory_limit]" --memory-swap="[memory_limit]" [docker_image]
+
+For instance, to run a container from the Ubuntu image, assigning 1 GB of RAM 
+for the container to use and reserving 1 GB of RAM for swap memory, type:
+
+sudo docker run -it --memory="1g" --memory-swap="2g" ubuntu
+
+Note: If you don’t want to use swap memory, give --memory and --memory-swap the same values.
+
+--------------------------soft limit to container memory-----------------------------------------------------------------------------------------
+Set Soft Limit to Container Memory
+Limiting the memory usage of a container with --memory is essentially setting a hard limit that cannot be surpassed.
+Alternatively, you can set a soft limit (--memory-reservation) which warns when the container reaches the 
+end of its assigned memory but doesn’t stop any of its services.
+
+If --memory limitations see are not set, setting the soft limit with --memory-reservation doesn’t completely
+limit container space. If you have both features enabled, the soft limit is always lower than the maximum space capacity.
+
+As an example, for an Ubuntu container to have the memory reservation of 750 MB and the maximum RAM capacity of 1 BG, use the command:
+
+sudo docker run -it --memory="1g" --memory-reservation="750m" ubuntu
+
+-----------------------limit docker container cpu usage---------------------------------------------------------------------------------
+Limit Docker Container CPU Usage
+Just like RAM usage, Docker containers don’t have any default limitations for the host’s CPU. 
+Giving containers unlimited CPU usage can lead to issues.
+
+There are several ways to define how much CPU resources from the host machine you want to assign to containers.
+
+For example, if you have a host with 2 CPUs and want to give a container access to one of them, 
+use the option --cpus="1.0". The command for running an Ubuntu container with access to 1 CPU would be:
+
+sudo docker run -it --cpus="1.0" ubuntu
+
+You can also use the --cpu-shares option to give the container a greater or lesser proportion of CPU cycles.
+By default, this is set to 1024.
+
+To run a container with lesser CPU shares, run:
+
+sudo docker run -it --cpus-shares="700" ubuntu
+
+To find more options for limiting container CPU usage, please refer to Docker’s official documentation.
+
+Note: Learn how to check CPU usage in Linux and how to check CPU temperature in Linux.
