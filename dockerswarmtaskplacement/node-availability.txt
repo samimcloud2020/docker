@@ -1,0 +1,18 @@
+Each node has THREE admin states.
+
+active: run on existing tasks, available for new tasks.
+
+pause: run on existing task, not available for new tasks. (good for troubleshooting).
+
+drainL reschedule existing tasks, not available for new task. ( good for maintainence)
+
+-----------------------------------------------------------------------------------
+prevent node2 from starting new containers.
+$ docker node update --availability pause node2
+
+------------------------------------------------------------------------------------
+stop containers on node3 and assign their tasks to another node.
+
+$ docker node update --availabilty drain node3
+
+-----------------------------------------------------------------------------------------
