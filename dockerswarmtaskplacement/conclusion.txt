@@ -1,0 +1,39 @@
+---------node label + service constraint--------------------------------------
+hard requirement: only schedules task , if swarm matches constraint.
+
+add labels to nodes 1st, then use constraints when creating service.
+
+-----------replicated and global---------------------------------------------
+global: one task per node.
+
+replicated(by default): --replicas
+
+global: good for monitoring, logging, proxy, security tools.
+
+only set on service creation time.
+
+-----------------17.04+ placement preferences--------------------------------
+soft requirement: now only used to spread across azs.
+
+-------------------node availability---------------------------------------
+active, pause, drain
+
+--------------resource requirements--------------------------------------
+--reserve-memory   --reserve-cpu   for min, --limit-memory   --limit-cpu    for max.
+
+
+If you run full virtualization, like QEMU, then all memory can be allocated and passed down into the VM.
+That VM then boots the kernel and the memory is managed by the kernel in the VM.
+
+In Docker, or any other container/namespace system, the memory is managed by the kernel that runs docker and the "containers". 
+The process that is run in container still runs like a normal process but in a different cgroup. Each cgroup has limits, 
+like how much memory the kernel will hand out to userland, or what network interfaces it sees, but it still runs on same kernel.
+
+An analogy of this is that docker is a "glorified ulimit". Processes under this limit still behave as normal Linux processes
+
+they allocate memory as-needed
+they will cause OOM issues if they pass some limit, or host runs out of memory.
+
+
+
+
