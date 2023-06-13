@@ -25,3 +25,8 @@ $ docker stack deploy -c docker-compose.yml stack1
 and as no image found , its start auto rollback to ver2: redis.
 
 -------------------------------done------------------------------------------------
+Mind it: in redis service: must two replica replica:2
+because as when service update (default one by one)
+as 1st task update start and failed then its starts rollback and old existing task still taking traffic.
+
+------------------------------------------------------------------------------------------------------------------
