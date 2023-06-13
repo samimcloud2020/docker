@@ -1,0 +1,40 @@
+swarm upgrade N instances at a time: --update-parallelism = x
+
+--update-failure-action=       [action on update failure (pause | continue | rollback)]
+
+( in test env:  use pause or continue to know the fault )
+(in prod env: use rollback)
+
+--update-delay=     [ delay between updates]
+
+--update-max-failure-ratio=    [failure rate to tolerate during update]
+
+--update-monitor=    [ duration after each task update to monitor for fail]
+
+--update-order=   [start-first| stop-first]
+(default to stop-first)
+
+--stop-signal-string=     [signal to stop the container]
+
+--stop-grace-period=    [time to wait before killing a container] (ns| us| ms|s|m|h)
+
+------------MONITOR FOR 5MIN BEFORE NEXT,    ROLLBACK ON FAILURE------------------------------------------------------
+$ docker service update --update-failure-action rollback --update-monitor 5m 
+
+---------update 5 instances at a time,  up 25% can fail until failure action----------------------------
+$ docker service update --update-parallelism 5 --update-max-failure-ratio 0.25
+
+(for you have lot of containers and distributed failures are ok )
+
+----------------start new container 1st , before killing old one---------------------------------------
+$ docker service update --update-order start-first < svc name>
+
+(good for single replica services( you do not need HA)
+
+(not good for database with volume storage (avoid file multi access))
+
+---------how one replica update done at a time--------------------------------------------------------------------------------------------------
+
+
+
+-------------
