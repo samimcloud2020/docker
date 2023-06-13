@@ -8,4 +8,26 @@
 
 
 
+TASK IS started-----> starting
+task transtion to healthy , healthcheck passed ----> starting
+application failure.----> healthy
+1st healthcheck failure.---> healthy
+2nd health check failure----> healthy
+3rd health check failure----> unhealthy
+task removed from VIP LB, SIGTERM sent to container, task contiues running until "stop-grace-period" elapsed----> unhealthy
+SIGKILL sent to container, a new task is rescheduled, according to reschdule policy---->unhealthy
+
+
+only validate current container. nothing external or data.
+ensure index page return 200.
+ensure nginx proxy return 200 per /ping page.
+ensure DB accepts connections, returns from tmp db.
+
+leave integration healthcheck for external monitoring.
+ensure web api return valid db data.
+ensure db returns valid db, data.
+
+
+
+
 
