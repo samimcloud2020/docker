@@ -25,7 +25,10 @@ ensure DB accepts connections, returns from tmp db.
 
 leave integration healthcheck for external monitoring.
 ensure web api return valid db data.
-ensure db returns valid db, data.
+ensure db returns proper table or record count.
+ensure web frontend query api.
+
+
 
 
 
