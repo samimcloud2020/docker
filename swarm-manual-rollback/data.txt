@@ -1,0 +1,5 @@
+$ docker service rollback < svc name>    ---------previous ver rollback
+
+----------------------------------------------------------
+auto rollback during service update
+
