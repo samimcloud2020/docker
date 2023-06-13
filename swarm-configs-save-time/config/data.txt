@@ -1,0 +1,25 @@
+$ docker config create nginx01 ./nginx.conf
+9vaxmpitjvpcrr8b3726p2dto
+[manager1] (local) root@192.168.0.8 ~/docker/swarm-configs-save-time
+$ docker config ls
+ID                          NAME      CREATED          UPDATED
+9vaxmpitjvpcrr8b3726p2dto   nginx01   10 seconds ago   10 seconds ago
+[manager1] (local) root@192.168.0.8 ~/docker/swarm-configs-save-time
+$ docker config inspect nginx01
+[
+    {
+        "ID": "9vaxmpitjvpcrr8b3726p2dto",
+        "Version": {
+            "Index": 69
+        },
+        "CreatedAt": "2023-06-13T02:16:02.656905445Z",
+        "UpdatedAt": "2023-06-13T02:16:02.656905445Z",
+        "Spec": {
+            "Name": "nginx01",
+            "Labels": {},
+            "Data": "d29ya2VyX3Byb2Nlc3NlcyAxOwogIApldmVudHMgeyB3b3JrZXJfY29ubmVjdGlvbnMgMTAyNDsgfQoKaHR0cCB7CgogICAgc2VuZGZpbGUgb247CgogICAgdXBzdHJlYW0gZG9ja2VyLW5naW54IHsKICAgICAgICBzZXJ2ZXIgbmdpbng6ODA7CiAgICB9CgogICAgdXBzdHJlYW0gZG9ja2VyLWFwYWNoZSB7CiAgICAgICAgc2VydmVyIGFwYWNoZTo4MDsKICAgIH0KICAgIAogICAgcHJveHlfc2V0X2hlYWRlciAgIEhvc3QgJGhvc3Q7CiAgICBwcm94eV9zZXRfaGVhZGVyICAgWC1SZWFsLUlQICRyZW1vdGVfYWRkcjsKICAgIHByb3h5X3NldF9oZWFkZXIgICBYLUZvcndhcmRlZC1Gb3IgJHByb3h5X2FkZF94X2ZvcndhcmRlZF9mb3I7CiAgICBwcm94eV9zZXRfaGVhZGVyICAgWC1Gb3J3YXJkZWQtSG9zdCAkc2VydmVyX25hbWU7CiAgICAKICAgIHNlcnZlciB7CiAgICAgICAgbGlzdGVuIDgwODA7CiAKICAgICAgICBsb2NhdGlvbiAvIHsKICAgICAgICAgICAgcHJveHlfcGFzcyAgICAgICAgIGh0dHA6Ly9kb2NrZXItbmdpbng7CiAgICAgICAgICAgIHByb3h5X3JlZGlyZWN0ICAgICBvZmY7CiAgICAgICAgfQogICAgfQogCiAgICBzZXJ2ZXIgewogICAgICAgIGxpc3RlbiA4MDgxOwogCiAgICAgICAgbG9jYXRpb24gLyB7CiAgICAgICAgICAgIHByb3h5X3Bhc3MgICAgICAgICBodHRwOi8vZG9ja2VyLWFwYWNoZTsKICAgICAgICAgICAgcHJveHlfcmVkaXJlY3QgICAgIG9mZjsKICAgICAgICB9CiAgICB9Cn0K"
+        }
+    }
+]
+
+
