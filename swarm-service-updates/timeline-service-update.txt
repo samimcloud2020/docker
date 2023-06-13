@@ -34,7 +34,19 @@ $ docker service update --update-order start-first < svc name>
 (not good for database with volume storage (avoid file multi access))
 
 ---------how one replica update done at a time--------------------------------------------------------------------------------------------------
+1. Ensure resource avalability. (pending)
 
+2. pulls image if necessary .(preparing)
+
+3.create container......without starting it. (ready)
+
+if task fails to get "ready" state, it retries with a  new task.
+
+when tasks are ready, it sets the old task desired to shutdown.
+
+when old stack are shutdown, it starts a new task, set to running.
+
+then it waits for update-delay, and continue with next task batch.
 
 
 -------------
