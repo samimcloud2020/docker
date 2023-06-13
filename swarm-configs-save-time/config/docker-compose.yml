@@ -1,0 +1,26 @@
+version: "3.3"
+services:
+    reverseproxy:
+        image: reverseproxy
+        ports:
+            - 8080:8080
+            - 8081:8081
+        restart: always
+        configs:
+            - source: nginx01
+              target: /etc/nginx/nginx.conf
+ 
+    nginx:
+        depends_on:
+            - reverseproxy
+        image: nginx:alpine
+        restart: always
+ 
+    apache:
+        depends_on:
+            - reverseproxy
+        image: httpd:alpine
+        restart: always
+configs:
+    nginx01: 
+        file: ./nginx.conf
