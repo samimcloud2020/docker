@@ -1,0 +1,27 @@
+$ docker stack deploy -c docker-compose.yml stack1
+
+$ docker stack ps stack1
+
+$ docker service ls
+
+$ docker service logs redis
+
+---------------let change image in docker-compose.yml from redis:alpine to redis-------
+
+then
+$ docker stack deploy -c docker-compose.yml stack1
+
+(start updating service)
+
+and redis image now redis from redis:alpine
+
+ver1 : redis:alp[ine
+ver2: redis
+
+let now change image redis to redio(wrong image) and see its going to auto rollback or not (in docker-compose.yml)?
+$ docker stack deploy -c docker-compose.yml stack1
+(updating service
+
+and as no image found , its start auto rollback to ver2: redis.
+
+-------------------------------done------------------------------------------------
