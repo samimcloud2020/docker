@@ -1,0 +1,11 @@
+--health-cmd command to run to check health
+--health-interval default:30s time between running the check (ms|m|s|h)
+--health-retries default: 3 consequtive failure needed to report unhealthy
+--health-start-period default:0s time for container to start before counting to unstable.
+--health-timeout default:30s maximum time to allow one check to run.
+--stop-grace-period time to wait before force killing a container. (ns|us|ms|s|m|h)
+--no-healthcheck disable any container have HEALTHCHECK.
+
+
+
+
