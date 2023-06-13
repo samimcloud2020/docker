@@ -1,0 +1,21 @@
+service update default:   replace each replica, one at a time.
+
+different apps handle session and reconnection differentely.
+
+$ docker network create --driver overlay --attachable verse
+
+$ docker service create --name firefly -p 80:80 --network verse --replicas 5 bretfisher/browncoat:v1
+
+$ docker run --rm --network verse bretfisher/httping -i, .1 -GsY firely/healthz
+
+
+------------now lets update it--------------------------------
+$ docker service update --image bretfisher:browncoat:v2 firefly
+
+then see how 201, 202 status code
+
+-------------------slow container start up--------------------------------------------
+
+$ docker service update --env-add DELAY-STARTUP=5000 firefly
+
+
