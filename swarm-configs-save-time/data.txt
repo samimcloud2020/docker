@@ -11,8 +11,8 @@ services:
   web:
     image: nginx
     configs:
-      source: nginx01
-      target: /etc/nginx/conf.d/default.conf
+      - source: nginx01
+        target: /etc/nginx/conf.d/default.conf
 configs:
   nginx01:
     file: ./nginx.conf
