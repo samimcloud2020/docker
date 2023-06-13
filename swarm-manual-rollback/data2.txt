@@ -1,0 +1,13 @@
+$ docker service create --name firefly --replicas 3 bretfisher/browncoat:healthcheck
+
+$ docker service update --image bretfisher/browncoat:v3.healthcheck firefly  ----during 1st task its failed health check.
+default failure action is "pause".
+
+
+$docker service rollback firefly   ---------------------manual rollback
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+$ docker service update --image bretfisher/browncoat:v3.healthcheck --update-failure-action rollback firefly  -----auto rollback 
+(as 1st task fails due to healthcheck, its auto rollback.
+
+--------------------------------------------------------------------------------------------------------------------------------------
