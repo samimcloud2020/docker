@@ -1,0 +1,94 @@
+Docker is very kernel and storage driver depedent.
+
+ubuntu 16.04 LTS: Well tested with docker, 4*kernel and wide storage driver support.
+
+or infokit / linuxkit
+
+correct docker from store.docker.com
+
+container base image: not take as lower size. (at last change to alpine)
+
+window workload: win server 2016 node in swarm
+
+outsourcing:  image registry, logs, monitoring & alerting.
+
+swarm GUI: partainer
+central monitoring: prometheus + grafana
+central logging: ELK
+l7 proxy: flow-proxy, tarefik
+registry: docker distribution + portus
+ci/cd: jenkins
+storage: rex-ray
+networking: docker swarm
+orchestration: docker swarm
+runtime: docker
+hw/os: infrakit or terraform
+
+
+
+----------------cheap and easy----------------------------------------
+swarm GUI: partainer
+central monitoring: librato, sysdig
+central logging: docker for aws/azure
+l7 proxy: flow-proxy, tarefik
+registry: docker hub, quay
+ci/cd: codeship, travisCI
+storage: docker for aws/azure
+networking: docker swarm
+orchestration: docker swarm
+runtime: docker
+hw/os: docker for aws/azure
+
+
+-------------------------docker enterprise edition---------------------------------------------------------------
+
+swarm GUI: docker EE(ucp)
+central monitoring: librato, sysdig
+central logging: docker for aws/azure
+l7 proxy: docker EE(ucp)
+registry: docker EE(DTR)
+ci/cd: codeship, travisCI
+storage: docker for aws/azure
+networking: docker swarm
+orchestration: docker swarm
+runtime: docker EE
+hw/os: docker for aws/azure
+
+---------------------------------------------------------------------------------------------------------------
+
+
+l7 proxy (trafik) + overlay + app services
+--------------------------------------------------------------------
+cluster + external LB
+
+--------------------------------------------------
+docker-app deploy
+----------------------------------------------
+terraform to deploy
+--------------------------------------------------
+docker 18.09 ssh endpoints for docker cli
+DOCKER_HOST=ssh://user@server docker ps
+-----------------------------------------------
+host setup scanning:  docker bench
+image scanning: aqua microscanner
+brhaviour monitoring: sysdig, falco
+user namespace:
+------------------------------docker EE in aws---------------------
+
+
+swarm GUI: docker EE(ucp)
+central monitoring: aws cloudwatch + telegraph
+central logging: aws cloudwatch logs
+l7 proxy: http routing mesh (interlock + nginx)
+registry: docker EE(DTR)
+ci/cd: codeship, travisCI
+storage: docker cloudstar ebs/efs
+networking: docker swarm overlay
+orchestration: docker swarm
+runtime: docker EE
+hw/os: terraform + ansible + aws
+---------------------------------------------------------------------------
+
+
+
+
