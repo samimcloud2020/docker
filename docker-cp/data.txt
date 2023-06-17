@@ -1,0 +1,6 @@
+copy container to host---------------------
+$ docker cp c1:/usr/src/app/node_modules .   ---> $ docker cp <container name/cid>:path in container  .   (. is host dir)
+Successfully copied 2.41MB to /root/docker/docker-context/.
+
+copy host to container-----------------
+$ docker cp . <c name/c id>:path container
