@@ -1,0 +1,215 @@
+What Is the Build Context?
+Let’s start with the command used to build a Docker image:
+
+$ docker build [OPTIONS] PATH | URL | -
+The build context is the set of files located at the specified PATH or URL.
+Those files are sent to the Docker daemon during the build 
+so it can use them in the filesystem of the image.
+-----------------------------------------
+Using a path
+Let’s suppose I’m in the folder /Users/luc/src/github.com/lucj/genx containing the
+source code of the genx application (simple Go application that generates dummy data).
+
+Usually, we use a command like the following one to build the image, the Dockerfile 
+being at the root of the project’s folder:
+
+$ docker image build -t genx:1.0 .
+In that case, the build context is the content of the current folder
+(“.” specified as the last element of the command).
+
+------------------------------------------------------
+Using a URL
+This same genx project is managed in GitLab, so it’s possible to build an image locally 
+referencing the GitLab repository:
+
+$ docker image build -t genx:1.0 git@gitlab.com:lucj/genx.git
+In that case, the build context is the set of files in gitlab.com/lucj/genx.
+
+Basically, the build context contains at least the application code which will be 
+copied over to the image filesystem, but it often contains many other things 
+we may or may not need in the image.
+-------------------------------------------------------------------------------------
+Should I Filter the Build Context?
+Yes, we’d probably be better off making sure the build context only contains the files 
+and folders it really needs.
+
+In a project where source code is handled by Git, we use a .gitignore 
+file to make sure private data is kept locally and not sent out to GitHub/GitLab/BitBucket/etc.
+
+The same thing applies during the build phase of a Docker image as the daemon uses a 
+.dockerignore file to filter out the files and folders that should not be taken 
+into account in the build context.
+----------------------------------------------------------------------------
+What if I Don’t Use a .dockerignore?
+You would then send to the Docker daemon a lot of stuff that 
+it does not need and which could be copied over to the image filesystem.
+--------------------------------------------------------------------------------
+Huge file in the build context
+Let’s consider the following Dockerfile. It uses a nginx:1.14.0 base image
+and copies the content of the current folder (index.html, css, js, img)
+into the default location served by NGINX (/usr/share/nginx/html).
+
+FROM nginx:1.14.0
+COPY . /usr/share/nginx/html/
+The content of the current folder is like this:
+
+$ tree -ah
+.
+├── [  48]  Dockerfile
+├── [  64]  css
+├── [  64]  images
+├── [  39]  index.html
+├── [  64]  js
+└── [1.8G]  ubuntu-18.04.1-desktop-amd64.iso
+Note: Did you notice the Ubuntu installation ISO in this folder (here by mistake)? 
+When building the image, this huge guy is sent out to the daemon and copied over 
+to the image… obviously, not something we want.
+
+Note: I do not recommend following this example.
+The Docker daemon does not really like it… at all.
+(I even needed to restart it on my MacBook Pro afterward).
+
+But, in case we really need this file here (just for fun), 
+we just have to create a .dockerignore file and add its name in it. 
+We should add *.iso just in case we download other ISOs.
+
+Doing so, we can be sure no ISO file will be sent to the daemon.
+
+OK, it’s not likely that a 2 GB ISO file will be present in the current
+folder but… what about the Git history of the project, which can also be quite huge?
+---------------------------------------------------------------------------------
+
+Git history
+Let’s remove the ISO file and start handling this project with Git.
+
+$ git init
+$ tree -a
+.
+├── .git
+│   ├── HEAD
+│   ├── branches
+│   ├── config
+│   ├── description
+│   ├── hooks
+│   │   ├── applypatch-msg.sample
+│   │   ├── commit-msg.sample
+│   │   ├── fsmonitor-watchman.sample
+│   │   ├── post-update.sample
+│   │   ├── pre-applypatch.sample
+│   │   ├── pre-commit.sample
+│   │   ├── pre-push.sample
+│   │   ├── pre-rebase.sample
+│   │   ├── pre-receive.sample
+│   │   ├── prepare-commit-msg.sample
+│   │   └── update.sample
+│   ├── info
+│   │   └── exclude
+│   ├── objects
+│   │   ├── info
+│   │   └── pack
+│   └── refs
+│       ├── heads
+│       └── tags
+├── Dockerfile
+├── css
+├── images
+├── index.html
+└── js
+We then create the image:
+
+$ docker image build -t www:1.0 .
+Sending build context to Docker daemon 40.96kB
+Step 1/2 : FROM nginx:1.14.0
+ — -> 86898218889a
+Step 2/2 : COPY . /usr/share/nginx/html/
+ — -> 973188e5d7a3
+Successfully built 973188e5d7a3
+Successfully tagged www:1.0
+And check what’s inside:
+
+$ docker run -ti www:1.0 bash
+root@5d91b258bdc3:/# cd /usr/share/nginx/html/
+root@5d91b258bdc3:/usr/share/nginx/html# ls
+50x.html Dockerfile css images index.html js
+root@5d91b258bdc3:/usr/share/nginx/html# find .git/
+.git/
+.git/description
+.git/config
+.git/refs
+.git/refs/tags
+.git/refs/heads
+.git/hooks
+.git/hooks/applypatch-msg.sample
+.git/hooks/pre-push.sample
+.git/hooks/pre-rebase.sample
+.git/hooks/prepare-commit-msg.sample
+.git/hooks/post-update.sample
+.git/hooks/pre-applypatch.sample
+.git/hooks/update.sample
+.git/hooks/fsmonitor-watchman.sample
+.git/hooks/pre-commit.sample
+.git/hooks/commit-msg.sample
+.git/hooks/pre-receive.sample
+.git/objects
+.git/objects/pack
+.git/objects/info
+.git/HEAD
+.git/branches
+.git/info
+.git/info/exclude
+root@5d91b258bdc3:/usr/share/nginx/html#
+The .git folder, containing the versioning history of the projects which can be a huge folder,
+is there. Do we need the whole Git history in the image? Don’t think so.
+We should then create a .dockerignore and add .git inside.
+---------------------------------------------------------------------------------
+Credentials
+Let’s say I work on a Node.js application that needs to connect to an external MongoDB database.
+
+When the application is deployed on a swarm or on a Kubernetes cluster, 
+it is advised to provide the connection string via a secret.
+(You might be interested in this article if you want to know more: From env variables to Docker secrets.)
+
+But, during the development phase, we might have those credentials
+in the current folder to test the application.
+
+What about having a creds folder in our project? That’s pretty ugly but that could help,
+right? Well, at least if we make sure it’s not replicated everywhere.
+
+$ tree
+.
+├── .git
+├── .gitignore
+├── Dockerfile
+├── app.js
+├── creds
+│ ├── mongo-preprod <-- mongodb://user:pass@prep.db.com:27017/mydb
+│ ├── mongo-prod    <-- mongodb://user:pass@prod.db.com:27017/mydb
+│ └── mongo-test    <-- mongodb://user:pass@test.db.com:27017/mydb
+├── node_modules
+│ ├── ...
+└── package.json
+I have the following .gitignore file, no problem, my password will not go to GitHub:
+
+creds
+node_modules
+But, I do not have any .dockerignore. My credential files will then be shipped over into the image.
+
+# Building the image
+$ docker build -t myapp:1.0 .
+# Checking what's inside the image's filesystem
+$ docker run -ti myapp:1.0 sh
+/app # ls
+Dockerfile         app.js             creds              node_modules       package-lock.json  package.json
+/app # find creds/
+creds/
+creds/mongo-test
+creds/mongo-prod
+creds/mongo-preprod
+/app # cat creds/mongo-prod
+mongodb://user:pass@prod.db.com:27017/mydb
+/app #
+We should have created a .dockerignore file and added the name 
+of the folder we do not want to expose (creds) in it.
+
+------------------------------------------------------------------------------------------------------
+
