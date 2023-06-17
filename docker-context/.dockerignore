@@ -3,3 +3,7 @@ npm-debug.log
 .git
 *Dockerfile*
 *docker-compose*
+.env
+.DS_Store
+.vscode
+*.log
