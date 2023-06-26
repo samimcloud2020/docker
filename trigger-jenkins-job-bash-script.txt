@@ -1,0 +1,48 @@
+
+Here is an example with a curl command (for a job with parameters):
+
+curl -X POST -u YOUR_USER:YOUR_USER_PASSWORD http://YOUR_JENKINS_URL/job/YOUR_JOB/buildWithParameters?PARAM1=value1&PARAM2=value
+And a job without parameters:
+
+curl -X POST -u YOUR_USER:YOUR_USER_PASSWORD http://YOUR_JENKINS_URL/job/YOUR_JOB/build
+If you don't want to use your user/password, you can generate an API token for your Jenkins user:
+
+enter image description here
+
+And use this token in your curl command:
+
+curl -X POST http://YOUR_JENKINS_URL/job/YOUR_JOB/build?TOKEN=YOUR_API_TOKEN
+
+----------------------------------------------------------------------------------------------------------------
+#!/bin/bash
+TOKEN='jenkins-user-token'
+USER='my-username'
+SERVER="http://your.server.address"
+
+#jenkins job parameters
+PARAMF=$1
+SECONDPARAM=$2
+
+# retrieve the crumb that we need to pass in the header
+CRUMBS=$(curl -s -X GET -u $USER:$TOKEN ${SERVER}/crumbIssuer/api/json  | jq -c '. | .crumb ')
+curl --user $USER:$TOKEN  -H "Jenkins-Crumb:${CRUMBS}" -X POST  "${SERVER}/view/MyView/job/JobName/buildWithParameters?TOKEN=${TOKEN}&PARAMETERONE=${PARAMF}&PARAMETERTWO=${SECONDPARAM}"
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Fast Forward to 2023
+
+You need to pass 2 tokens to execute your job remotely from a script/bash.
+You need:
+
+apiToken to authenticate your identity. This value is created from JENKINS_URL/me/configure . Also check here for documentation
+Another Job authentication token which you create when you enable 'Trigger builds remotely'.
+Below is a sample to execute job with 2 parameters, you can tweak to get your done.
+
+PARAM1_VALUE=<param1_value>
+PARAM2_VALUE=<param2_vale>
+USERNAME=dummy_user_name
+JENKINS_URL="http://10.xxx.x.xxx:8080"
+JOB_TOKEN="<value>" # you create this token when you enable Job>Configure>Build Triggers>Trigger builds remotely
+LOGIN_API_TOKEN="<value>" #get this value from JENKINS_URL/me/configure 
+
+curl -L --user $USERNAME:$LOGIN_API_TOKEN "$JENKINS_URL/job/JobName/buildWithParameters?token=$JOB_TOKEN&param1_name=$PARAM1_VALUE&param2_name=$PARAM2_VALUE"
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------
